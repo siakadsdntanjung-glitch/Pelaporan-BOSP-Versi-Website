@@ -329,6 +329,10 @@
       </div>
       <nav id="sidebar-nav" class="py-4 space-y-1 overflow-y-auto"></nav>
       <div class="p-4 border-t border-white/10 mt-4">
+        <a id="sidebar-panduan-link" href="#" target="_blank" rel="noopener"
+           class="hidden items-center gap-2 text-xs font-semibold text-white/85 hover:text-white mb-3">
+          📘 Buku Panduan
+        </a>
         <div class="text-xs text-navy-200 mb-2 truncate" id="sidebar-school-name">—</div>
         <button id="btn-logout" class="text-xs font-semibold text-gold hover:text-gold-200">Keluar</button>
       </div>
@@ -344,6 +348,10 @@
     </div>
     <div id="mobile-nav" class="hidden lg:hidden fixed inset-0 z-30 bg-navy text-white pt-16 px-4 no-print">
       <nav id="mobile-nav-list" class="space-y-1"></nav>
+      <a id="mobile-panduan-link" href="#" target="_blank" rel="noopener"
+         class="hidden items-center gap-2 mt-4 text-sm font-semibold text-white/85 hover:text-white">
+        📘 Buku Panduan
+      </a>
       <button id="btn-logout-mobile" class="mt-6 text-sm font-semibold text-gold">Keluar</button>
     </div>
 
@@ -581,8 +589,8 @@
           <!-- Grafik Pengelompokan Belanja: distribusi realisasi pengeluaran per kategori
                Kertas Kerja 2.2.1 (ATK/Jasa/Modal/Honor/Kebersihan/Alat Rumah Tangga). -->
           <div class="bg-white rounded-lg border border-navy-100 p-5">
-            <h3 class="font-serif font-semibold text-navy mb-1">Grafik Pengelompokan Belanja</h3>
-            <p class="text-xs text-navy-400 mb-5">Distribusi realisasi pengeluaran berdasarkan kategori pada Kertas Kerja 2.2.1.</p>
+            <h3 class="font-serif font-semibold text-navy mb-1">Grafik Pengelompokan Belanja <span id="donut-tahap-label" class="text-navy-400 font-sans font-normal text-sm"></span></h3>
+            <p class="text-xs text-navy-400 mb-5">Distribusi realisasi pengeluaran berdasarkan kategori pada Kertas Kerja 2.2.1, mengikuti Tahap Laporan BOSP yang sedang aktif.</p>
             <div class="flex flex-col md:flex-row items-center gap-8">
               <div class="relative shrink-0" style="width:200px;height:200px;">
                 <svg id="svg-donut-kelompok" viewBox="0 0 200 200" width="200" height="200" style="transform:rotate(-90deg);"></svg>
@@ -1861,7 +1869,7 @@ function confirmFix(pesan){
    lama yang dipakai sekolah-sekolah, cukup naikkan nilai minVersion di
    Firebase Console — tidak perlu menyentuh file di laptop sekolah.
    ========================================================================= */
-const APP_VERSION = "1.1.9"; // naikkan setiap kali merilis versi baru
+const APP_VERSION = "1.1.11"; // naikkan setiap kali merilis versi baru
 
 function compareVersion(a, b){
   const pa = String(a).split('.').map(Number);
@@ -3093,6 +3101,7 @@ function attachSchoolListeners(npsn){
     if(state.currentView==='sppd') renderSppd();
     if(state.currentView==='persetujuan') renderPersetujuan();
     if(state.currentView==='realisasi') renderRealisasi();
+    if(state.currentView==='kk221') renderKk221Table();
   });
 
   const bankCb = bankRef.on('value', snap=>{
@@ -3249,10 +3258,35 @@ async function logAudit(entitas, aksi, keterangan){
    masuk & menonaktifkannya kembali dari dalam aplikasi (tidak perlu buka
    Firebase Console).
    ========================================================================= */
+/* ---- Tombol "Buku Panduan" (sidebar desktop & menu mobile) ----
+   Diisi dari config/panduanUrl di Firebase, supaya link-nya bisa diganti
+   kapan saja (mis. saat rilis versi baru dengan panduan baru) tanpa perlu
+   build ulang aplikasi. Tombol otomatis disembunyikan bila field ini
+   kosong/belum diisi. ---- */
+function updatePanduanLink(cfg){
+  const url = (cfg.panduanUrl || '').trim();
+  [document.getElementById('sidebar-panduan-link'), document.getElementById('mobile-panduan-link')].forEach(el=>{
+    if(!el) return;
+    if(url){
+      el.href = url;
+      el.classList.remove('hidden');
+      el.classList.add('flex');
+    } else {
+      el.classList.add('hidden');
+      el.classList.remove('flex');
+    }
+  });
+}
+
 function attachMaintenanceListener(){
   const ref = db.ref('config');
   const cb = snap=>{
     const cfg = snap.val() || {};
+
+    // Tombol "Buku Panduan" di sidebar & menu mobile — dibaca dari
+    // config/panduanUrl (sama seperti config/downloadUrl untuk update
+    // banner), berlaku untuk semua role, realtime tanpa perlu reload.
+    updatePanduanLink(cfg);
 
     if(state.userData && state.userData.role === 'admin_utama'){
       renderMaintenancePanel(cfg);
@@ -3512,11 +3546,20 @@ function renderChartKelompokBelanja(){
   const totalEl = document.getElementById('donut-total-belanja');
   if(!svg || !legendEl) return;
 
+  // Mengikuti Tahap Laporan BOSP yang sedang aktif, sama seperti Buku Kas
+  // Umum & Kertas Kerja 2.2.1, agar grafik tidak mencampur realisasi Tahap 1
+  // dan Tahap 2.
+  const tahapAktifChart = state.tahapAktif || getDefaultTahap();
+  const labelTahapEl = document.getElementById('donut-tahap-label');
+  if(labelTahapEl) labelTahapEl.textContent = `— ${TAHAP_PERIODE[tahapAktifChart].short}`;
+
   const totals = {};
-  state.transactions.filter(t=>t.jenis==='pengeluaran').forEach(t=>{
-    const key = (t.kelompokBelanja && KELOMPOK_BELANJA_LABELS[t.kelompokBelanja]) ? t.kelompokBelanja : 'lainnya';
-    totals[key] = (totals[key]||0) + (Number(t.jumlah)||0);
-  });
+  state.transactions
+    .filter(t=>t.jenis==='pengeluaran' && bulanDalamTahap(t.tanggal, tahapAktifChart))
+    .forEach(t=>{
+      const key = (t.kelompokBelanja && KELOMPOK_BELANJA_LABELS[t.kelompokBelanja]) ? t.kelompokBelanja : 'lainnya';
+      totals[key] = (totals[key]||0) + (Number(t.jumlah)||0);
+    });
   const totalBelanja = Object.values(totals).reduce((s,v)=>s+v,0);
   if(totalEl) totalEl.textContent = fmtRupiah(totalBelanja);
 
@@ -3967,6 +4010,12 @@ document.querySelectorAll('.tahap-tab').forEach(btn=>{
     if(['kwitansi','nota','bast','lampiran'].includes(state.cetakDoc)){
       renderCetakList();
     }
+    // SPPD, Grafik Pengelompokan Belanja (Dashboard), & Kertas Kerja 2.2.1
+    // juga mengikuti Tahap Laporan BOSP aktif — muat ulang bila sedang dibuka
+    // supaya tidak menampilkan data tahap sebelumnya.
+    if(state.currentView === 'sppd') renderSppd();
+    if(state.currentView === 'dashboard-sekolah') renderDashboardSekolah();
+    if(state.currentView === 'kk221') renderKk221Table();
     // Kepala Sekolah hanya melihat (read-only) — Database Rules memang tidak
     // mengizinkan role ini menulis sekolah/{npsn}/tahapAktif (nilai bersama
     // yang menentukan periode aktif untuk seluruh sekolah), jadi percobaan
@@ -5117,7 +5166,11 @@ function buildOpnameKasDocument(t){
    tidak perlu koleksi/listener Firebase baru.
    ========================================================================= */
 function renderSppd(){
-  const list = state.transactions.filter(t=>t.perjalananDinas);
+  // Daftar SPPD ikut Tahap Laporan BOSP yang sedang aktif (sama seperti Buku
+  // Kas Umum & panel Cetak), supaya transaksi Perjalanan Dinas dari tahap
+  // lain tidak ikut tercampur/tercetak di sini.
+  const tahapAktifSppd = state.tahapAktif || getDefaultTahap();
+  const list = state.transactions.filter(t=>t.perjalananDinas && bulanDalamTahap(t.tanggal, tahapAktifSppd));
   const rows = list.map(t=>{
     const namaPegawai = (t.sppd && t.sppd.namaPegawai) || t.penerima || '';
     return `<tr class="border-b border-navy-50">
@@ -5130,7 +5183,7 @@ function renderSppd(){
       </td>
     </tr>`;
   }).join('');
-  document.getElementById('tbl-sppd').innerHTML = rows || `<tr><td colspan="5" class="py-8 text-center text-navy-300 font-sans">Belum ada transaksi yang ditandai Perjalanan Dinas. Centang "Perjalanan Dinas (tampilkan pada menu SPPD)" pada form Tambah/Ubah Transaksi.</td></tr>`;
+  document.getElementById('tbl-sppd').innerHTML = rows || `<tr><td colspan="5" class="py-8 text-center text-navy-300 font-sans">Belum ada transaksi yang ditandai Perjalanan Dinas pada ${escapeHtml(TAHAP_PERIODE[tahapAktifSppd].label)}. Centang "Perjalanan Dinas (tampilkan pada menu SPPD)" pada form Tambah/Ubah Transaksi.</td></tr>`;
   document.querySelectorAll('.btn-buka-sppd').forEach(b=>b.addEventListener('click', ()=>openSppdModal(b.dataset.id)));
 }
 
@@ -6620,7 +6673,10 @@ document.querySelectorAll('.kk221-tab').forEach(btn=>{
 });
 
 function getKk221Items(){
-  return state.transactions.filter(t=>t.jenis==='pengeluaran' && t.kelompokBelanja===state.kk221Tab);
+  // Kertas Kerja 2.2.1 ikut Tahap Laporan BOSP yang sedang aktif, agar
+  // rincian kategori belanja tidak mencampur transaksi Tahap 1 & Tahap 2.
+  const tahapAktifKk221 = state.tahapAktif || getDefaultTahap();
+  return state.transactions.filter(t=>t.jenis==='pengeluaran' && t.kelompokBelanja===state.kk221Tab && bulanDalamTahap(t.tanggal, tahapAktifKk221));
 }
 
 function renderKk221Table(){
@@ -6636,10 +6692,11 @@ function renderKk221Table(){
       <td class="py-2 px-3 font-sans">${escapeHtml(t.penerima||'')}</td>
       <td class="py-2 px-3 text-right">${fmtRupiah(t.jumlah)}</td>
     </tr>`).join('');
-  document.getElementById('tbl-kk221').innerHTML = rows || `<tr><td colspan="8" class="py-8 text-center text-navy-300 font-sans">Belum ada transaksi pengeluaran yang ditandai "${KK221_LABELS[state.kk221Tab]}". Tandai kelompok belanja pada form Tambah/Ubah Transaksi di Buku Kas Umum.</td></tr>`;
+  const tahapAktifKk221Label = state.tahapAktif || getDefaultTahap();
+  document.getElementById('tbl-kk221').innerHTML = rows || `<tr><td colspan="8" class="py-8 text-center text-navy-300 font-sans">Belum ada transaksi pengeluaran yang ditandai "${KK221_LABELS[state.kk221Tab]}" pada ${escapeHtml(TAHAP_PERIODE[tahapAktifKk221Label].label)}. Tandai kelompok belanja pada form Tambah/Ubah Transaksi di Buku Kas Umum.</td></tr>`;
   const total = items.reduce((s,t)=>s+(Number(t.jumlah)||0),0);
   document.getElementById('kk221-total').textContent = fmtRupiah(total);
-  document.getElementById('kk221-label').textContent = KK221_LABELS[state.kk221Tab];
+  document.getElementById('kk221-label').textContent = `${KK221_LABELS[state.kk221Tab]} — ${TAHAP_PERIODE[tahapAktifKk221Label].short}`;
 }
 
 document.getElementById('btn-kk221-xlsx').addEventListener('click', ()=>{
