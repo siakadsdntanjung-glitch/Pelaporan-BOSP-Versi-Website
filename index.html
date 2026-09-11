@@ -579,6 +579,24 @@
               <span id="stat-pagu-sisa">Sisa pagu: Rp 0</span>
             </div>
             <p id="stat-pagu-kosong" class="hidden text-xs text-rust mt-2">Pagu/alokasi BOSP tahap ini belum diisi — lengkapi di menu Profil Sekolah agar persentase realisasi terhadap pagu resmi dapat dihitung.</p>
+            <!-- Status ringkas per Jenis Dana BOSP (Reguler/Kinerja/Afirmasi) — badge
+                 kecil supaya admin langsung tahu status tiap jenis dana tanpa harus
+                 scroll ke kartu "Progres Realisasi per Jenis Dana BOSP" di bawah.
+                 Hanya menampilkan jenis dana yang memang ada pada sekolah ini,
+                 sama seperti kriteria pada kartu di bawah. -->
+            <div id="stat-pagu-status-jenisdana" class="flex flex-wrap gap-2 mt-3 pt-3 border-t border-navy-50"></div>
+          </div>
+
+          <!-- Progres realisasi per Jenis Dana BOSP (Reguler/Kinerja/Afirmasi) —
+               berbeda dari kartu Pagu di atas yang menggabungkan seluruh jenis
+               dana, kartu ini memecah progres per jenis dana yang memang ADA
+               pada sekolah ini (punya pagu terisi dan/atau sudah ada transaksi),
+               supaya admin tidak perlu bolak-balik pindah tab Jenis Dana BOSP
+               di Buku Kas Umum hanya untuk melihat progres masing-masing. -->
+          <div class="bg-white rounded-lg border border-navy-100 p-5">
+            <h3 class="font-serif font-semibold text-navy mb-1">Progres Realisasi per Jenis Dana BOSP <span id="progres-jenisdana-tahap-label" class="text-navy-400 font-sans font-normal text-sm"></span></h3>
+            <p class="text-xs text-navy-400 mb-4">Realisasi belanja tiap jenis dana BOSP yang dimiliki sekolah ini pada tahap laporan yang sedang aktif. Isi Pagu per Jenis Dana BOSP di menu Profil Sekolah agar persentase terhadap pagu resmi dapat dihitung.</p>
+            <div id="progres-jenisdana-list" class="space-y-4"></div>
           </div>
 
           <div class="bg-white rounded-lg border border-navy-100 p-5">
@@ -657,6 +675,44 @@
                     <input type="number" min="0" id="profil-pagu-tahap1" class="w-full rounded border border-navy-100 px-3 py-2 text-sm font-mono" placeholder="0"></div>
                   <div><label class="block text-xs font-semibold text-navy-400 mb-1">Pagu BOSP Tahap 2 (Rp)</label>
                     <input type="number" min="0" id="profil-pagu-tahap2" class="w-full rounded border border-navy-100 px-3 py-2 text-sm font-mono" placeholder="0"></div>
+                </div>
+              </div>
+
+              <!-- Pagu per Jenis Dana BOSP (opsional): rincian alokasi per Reguler/
+                   Kinerja/Afirmasi, dipakai khusus untuk menghitung progres realisasi
+                   per jenis dana pada Dashboard. Berbeda dari Pagu Tahap di atas yang
+                   merupakan total gabungan seluruh jenis dana. Boleh dikosongkan bila
+                   sekolah tidak menerima BOS Kinerja/Afirmasi, atau bila rincian per
+                   jenis dana belum tersedia — Dashboard akan tetap menampilkan
+                   realisasi tanpa persentase untuk jenis dana yang paguya kosong. -->
+              <div class="border-t border-navy-100 pt-4">
+                <h4 class="text-xs font-bold text-navy uppercase tracking-wide mb-1">Pagu per Jenis Dana BOSP (Opsional)</h4>
+                <p class="text-xs text-navy-400 mb-3">Isi bila ingin Dashboard menampilkan progres realisasi terpisah untuk tiap jenis dana (BOSP Reguler / BOS Kinerja / BOS Afirmasi). Kosongkan jenis dana yang memang tidak diterima sekolah ini — hanya jenis dana dengan pagu terisi atau yang sudah punya transaksi yang akan muncul di Dashboard.</p>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-sm">
+                    <thead><tr class="text-left text-xs uppercase text-navy-400 border-b border-navy-100">
+                      <th class="py-2 pr-4">Jenis Dana</th>
+                      <th class="py-2 pr-4">Pagu Tahap 1 (Rp)</th>
+                      <th class="py-2">Pagu Tahap 2 (Rp)</th>
+                    </tr></thead>
+                    <tbody>
+                      <tr class="border-b border-navy-50">
+                        <td class="py-2 pr-4 font-medium text-navy">BOSP Reguler</td>
+                        <td class="py-2 pr-4"><input type="number" min="0" id="profil-pagu-jd-reguler-1" class="w-full rounded border border-navy-100 px-3 py-2 text-sm font-mono" placeholder="0"></td>
+                        <td class="py-2"><input type="number" min="0" id="profil-pagu-jd-reguler-2" class="w-full rounded border border-navy-100 px-3 py-2 text-sm font-mono" placeholder="0"></td>
+                      </tr>
+                      <tr class="border-b border-navy-50">
+                        <td class="py-2 pr-4 font-medium text-navy">BOS Kinerja</td>
+                        <td class="py-2 pr-4"><input type="number" min="0" id="profil-pagu-jd-kinerja-1" class="w-full rounded border border-navy-100 px-3 py-2 text-sm font-mono" placeholder="0"></td>
+                        <td class="py-2"><input type="number" min="0" id="profil-pagu-jd-kinerja-2" class="w-full rounded border border-navy-100 px-3 py-2 text-sm font-mono" placeholder="0"></td>
+                      </tr>
+                      <tr>
+                        <td class="py-2 pr-4 font-medium text-navy">BOS Afirmasi</td>
+                        <td class="py-2 pr-4"><input type="number" min="0" id="profil-pagu-jd-afirmasi-1" class="w-full rounded border border-navy-100 px-3 py-2 text-sm font-mono" placeholder="0"></td>
+                        <td class="py-2"><input type="number" min="0" id="profil-pagu-jd-afirmasi-2" class="w-full rounded border border-navy-100 px-3 py-2 text-sm font-mono" placeholder="0"></td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
 
@@ -761,6 +817,22 @@
             </div>
           </div>
 
+          <!-- JENIS DANA BOSP: pemisah bagian Reguler/Kinerja/Afirmasi agar data BKU tidak
+               tercampur antar jenis dana. Sama seperti bar Tahap di atas, class "no-print"
+               SENGAJA tidak dipasang pada wadah luarnya agar tab ini tetap terlihat oleh
+               Kepala Sekolah (mode read-only) saat menelusuri data ketiga jenis dana. -->
+          <div class="bg-white rounded-lg border border-navy-100 p-4 flex flex-wrap items-center justify-between gap-4" id="bku-jenisdana-bar">
+            <div>
+              <p class="text-xs font-semibold text-navy-400 uppercase tracking-wide mb-2">Jenis Dana BOSP Aktif</p>
+              <div class="flex gap-2 flex-wrap" id="jenisdana-tabs">
+                <button data-jenisdana="reguler" class="jenisdana-tab px-4 py-2 text-sm font-semibold rounded bg-navy text-white">BOSP Reguler</button>
+                <button data-jenisdana="kinerja" class="jenisdana-tab px-4 py-2 text-sm font-semibold rounded bg-white border border-navy-200 text-navy">BOS Kinerja</button>
+                <button data-jenisdana="afirmasi" class="jenisdana-tab px-4 py-2 text-sm font-semibold rounded bg-white border border-navy-200 text-navy">BOS Afirmasi</button>
+              </div>
+              <p class="text-xs text-navy-300 mt-2 max-w-md">Buku Kas Umum, Kertas Kerja, SPPD, Dashboard, dan Cetak Dokumen SPJ hanya menampilkan &amp; menerima transaksi pada jenis dana yang aktif, sehingga membuat atau mereset SPJ salah satu jenis dana tidak menghapus/mencampur data jenis dana lainnya.</p>
+            </div>
+          </div>
+
           <div class="flex flex-wrap items-center gap-2 justify-between no-print">
             <div class="flex flex-wrap gap-2">
               <button id="btn-tambah-transaksi" class="bg-navy hover:bg-navy-600 text-white text-sm font-semibold rounded px-4 py-2">+ Transaksi</button>
@@ -777,7 +849,7 @@
             </div>
           </div>
           <div id="import-feedback" class="hidden text-sm rounded px-3 py-2 no-print"></div>
-          <p class="text-xs text-navy-300 no-print">Format kolom import/export (CSV atau Excel): Tanggal, Kode Kegiatan, No. Bukti/BKU, Kode Program, Kode Rekening, Uraian, Kualitas, Satuan, Jenis Transaksi, Kategori Belanja (ATK/Jasa/Modal/Honor/Kebersihan/Alat RT), Jumlah (Rp), Nama Penerima, NIP Penerima — sama seperti form "+ Transaksi". Kolom Kategori Belanja bersifat opsional (boleh dikosongkan) dan tidak memengaruhi import file lama tanpa kolom ini. Klik "Unduh Template" untuk contoh filenya.</p>
+          <p class="text-xs text-navy-300 no-print">Format kolom import/export (CSV atau Excel): Tanggal, Kode Kegiatan, No. Bukti/BKU, Kode Program, Kode Rekening, Uraian, Kualitas, Satuan, Jenis Transaksi, Kategori Belanja (ATK/Jasa/Modal/Honor/Kebersihan/Alat RT), Jumlah (Rp), Nama Penerima, NIP Penerima — sama seperti form "+ Transaksi". Kolom Kategori Belanja bersifat opsional (boleh dikosongkan) dan tidak memengaruhi import file lama tanpa kolom ini. Semua baris yang diimpor otomatis masuk ke bagian Jenis Dana BOSP yang sedang aktif di atas — pindah tab Jenis Dana terlebih dahulu bila file berisi data jenis dana lain. Klik "Unduh Template" untuk contoh filenya.</p>
           <div class="bg-white rounded-lg border border-navy-100 overflow-hidden">
             <div class="overflow-x-auto ledger-bg">
               <table class="w-full text-sm min-w-[1100px] border-collapse">
@@ -1164,6 +1236,12 @@
                     <option value="1">Tahap 1 (Januari–Juni)</option>
                     <option value="2">Tahap 2 (Juli–Desember)</option>
                   </select></div>
+                <div><label class="block text-xs font-semibold text-navy-400 mb-1">Jenis Dana BOSP</label>
+                  <select id="kafer-jenisdana" class="w-full rounded border border-navy-100 px-3 py-2 text-sm bg-white">
+                    <option value="reguler">BOSP Reguler</option>
+                    <option value="kinerja">BOS Kinerja</option>
+                    <option value="afirmasi">BOS Afirmasi</option>
+                  </select></div>
                 <div><label class="block text-xs font-semibold text-navy-400 mb-1">Tahun Anggaran</label>
                   <input id="kafer-tahun" class="w-full rounded border border-navy-100 px-3 py-2 text-sm" placeholder="2026"></div>
                 <div class="sm:col-span-2"><label class="block text-xs font-semibold text-navy-400 mb-1">Judul Laporan</label>
@@ -1196,6 +1274,12 @@
                   <select id="sptjm-tahap" class="w-full rounded border border-navy-100 px-3 py-2 text-sm bg-white">
                     <option value="1">Tahap 1 (Januari–Juni)</option>
                     <option value="2">Tahap 2 (Juli–Desember)</option>
+                  </select></div>
+                <div><label class="block text-xs font-semibold text-navy-400 mb-1">Jenis Dana BOSP</label>
+                  <select id="sptjm-jenisdana" class="w-full rounded border border-navy-100 px-3 py-2 text-sm bg-white">
+                    <option value="reguler">BOSP Reguler</option>
+                    <option value="kinerja">BOS Kinerja</option>
+                    <option value="afirmasi">BOS Afirmasi</option>
                   </select></div>
                 <div><label class="block text-xs font-semibold text-navy-400 mb-1">Tahun Anggaran</label>
                   <input id="sptjm-tahun" class="w-full rounded border border-navy-100 px-3 py-2 text-sm" placeholder="2026"></div>
@@ -1406,7 +1490,8 @@
 <!-- ========================= MODAL: TRANSAKSI ========================= -->
 <div id="modal-transaksi" class="hidden fixed inset-0 z-50 bg-navy-900/50 flex items-center justify-center p-4 no-print">
   <div class="bg-white rounded-lg max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
-    <h3 class="font-serif text-lg font-semibold text-navy mb-4" id="modal-transaksi-title">Tambah Transaksi</h3>
+    <h3 class="font-serif text-lg font-semibold text-navy mb-1" id="modal-transaksi-title">Tambah Transaksi</h3>
+    <p class="text-xs text-navy-400 mb-4">Akan dicatat pada bagian <span id="modal-transaksi-jenisdana" class="font-semibold text-navy"></span>. Pindah tab Jenis Dana BOSP pada Buku Kas Umum bila ingin mencatat ke bagian lain.</p>
     <form id="form-transaksi" class="space-y-3">
       <input type="hidden" id="tx-id">
       <div class="grid grid-cols-2 gap-3">
@@ -1800,6 +1885,82 @@
   </div>
 </div>
 
+<!-- ========================= DETAIL SEKOLAH (Admin Utama) =========================
+     Modal read-only yang tampil ketika Admin Utama mengklik nama sekolah di
+     tabel manapun (Dashboard Utama, Manajemen Sekolah, Verifikasi, Monitoring,
+     Rekapitulasi). Menampilkan ringkasan data sekolah tersebut — mirip
+     dashboard yang dilihat Admin Sekolah — tanpa perlu login sebagai sekolah
+     itu. Semua data diambil dari state.allSchools/allUsers/allTransactions
+     yang sudah dimuat oleh attachAdminUtamaListeners(), jadi modal ini
+     murni tampilan (tidak menulis apa pun ke Firebase). ========================= -->
+<div id="modal-detail-sekolah" class="hidden fixed inset-0 z-50 bg-navy-900/50 flex items-center justify-center p-4 no-print">
+  <div class="bg-white rounded-lg shadow-lg max-w-3xl w-full p-6 max-h-[90vh] overflow-y-auto">
+    <div class="flex items-start justify-between gap-3 mb-1">
+      <div>
+        <h3 class="font-serif text-lg font-semibold text-navy" id="modal-detail-sekolah-title">Nama Sekolah</h3>
+        <p class="text-xs text-navy-400 mt-1" id="modal-detail-sekolah-sub">—</p>
+      </div>
+      <button id="modal-detail-sekolah-close-x" type="button" class="text-navy-300 hover:text-navy text-xl leading-none px-1" aria-label="Tutup">&times;</button>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 mt-5">
+      <div class="bg-paper rounded-lg border border-navy-100 p-4">
+        <div class="text-xs font-semibold text-navy-400 uppercase tracking-wide">Saldo Kas</div>
+        <div class="font-mono text-base font-semibold text-navy mt-1" id="detail-sekolah-stat-saldo">Rp 0</div>
+      </div>
+      <div class="bg-forest-100 rounded-lg border border-forest/20 p-4">
+        <div class="text-xs font-semibold text-forest uppercase tracking-wide">Penerimaan</div>
+        <div class="font-mono text-base font-semibold text-forest mt-1" id="detail-sekolah-stat-penerimaan">Rp 0</div>
+      </div>
+      <div class="bg-rust-100 rounded-lg border border-rust/20 p-4">
+        <div class="text-xs font-semibold text-rust uppercase tracking-wide">Pengeluaran</div>
+        <div class="font-mono text-base font-semibold text-rust mt-1" id="detail-sekolah-stat-pengeluaran">Rp 0</div>
+      </div>
+      <div class="bg-paper rounded-lg border border-navy-100 p-4">
+        <div class="text-xs font-semibold text-navy-400 uppercase tracking-wide">Jumlah Transaksi</div>
+        <div class="font-mono text-base font-semibold text-navy mt-1" id="detail-sekolah-stat-transaksi">0</div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+      <div class="bg-white rounded-lg border border-navy-100 p-4">
+        <h4 class="font-serif font-semibold text-navy text-sm mb-3">Profil Sekolah</h4>
+        <dl class="grid grid-cols-1 gap-3 text-sm" id="detail-sekolah-profil"></dl>
+      </div>
+      <div class="bg-white rounded-lg border border-navy-100 p-4 space-y-4">
+        <div>
+          <h4 class="font-serif font-semibold text-navy text-sm mb-3">Pejabat Sekolah</h4>
+          <dl class="grid grid-cols-1 gap-3 text-sm" id="detail-sekolah-pejabat"></dl>
+        </div>
+        <div class="border-t border-navy-50 pt-3">
+          <div class="flex items-center justify-between mb-2">
+            <h4 class="font-serif font-semibold text-navy text-sm">Kelengkapan SPJ</h4>
+            <span id="detail-sekolah-stat-spj" class="text-sm">—</span>
+          </div>
+          <dl class="grid grid-cols-2 gap-3 text-sm" id="detail-sekolah-pagu"></dl>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg border border-navy-100 p-4 mt-4">
+      <h4 class="font-serif font-semibold text-navy text-sm mb-3">Transaksi Terbaru</h4>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead><tr class="text-left text-xs uppercase text-navy-400 border-b border-navy-100">
+            <th class="py-2 pr-4">Tanggal</th><th class="py-2 pr-4">Uraian</th><th class="py-2 pr-4">Jenis</th><th class="py-2 pr-4 text-right">Jumlah</th>
+          </tr></thead>
+          <tbody id="detail-sekolah-tbl-transaksi"></tbody>
+        </table>
+      </div>
+      <p class="text-[11px] text-navy-300 mt-2" id="detail-sekolah-tx-note"></p>
+    </div>
+
+    <div class="flex justify-end mt-5">
+      <button id="modal-detail-sekolah-close" type="button" class="px-4 py-2 rounded text-sm border border-navy-200 text-navy-600 hover:bg-paper">Tutup</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* =========================================================================
    FIREBASE CONFIG
@@ -1869,7 +2030,7 @@ function confirmFix(pesan){
    lama yang dipakai sekolah-sekolah, cukup naikkan nilai minVersion di
    Firebase Console — tidak perlu menyentuh file di laptop sekolah.
    ========================================================================= */
-const APP_VERSION = "1.1.11"; // naikkan setiap kali merilis versi baru
+const APP_VERSION = "2.1.1"; // naikkan setiap kali merilis versi baru
 
 function compareVersion(a, b){
   const pa = String(a).split('.').map(Number);
@@ -1994,6 +2155,7 @@ const state = {
   cetakSelection: new Set(),
   kk221Tab: 'atk',   // sub bagian aktif pada Kertas Kerja Unit 2.2.1: 'atk' | 'jasa' | 'modal' | 'honor' | 'kebersihan' | 'rumahtangga'
   tahapAktif: null,   // '1' (Jan–Jun) atau '2' (Jul–Des) — tahap laporan BOSP yang sedang dikerjakan admin sekolah
+  jenisDanaAktif: null, // 'reguler' | 'kinerja' | 'afirmasi' — bagian dana BOSP yang sedang dikerjakan admin sekolah
   listeners: []       // refs to detach on logout
 };
 let justRegistered = false; // true while the register handler is still writing to the DB,
@@ -2035,6 +2197,22 @@ function rentangTanggalTahap(tahap){
   const max = `${tahun}-${String(p.selesaiBulan).padStart(2,'0')}-${String(akhirTgl).padStart(2,'0')}`;
   return { min, max };
 }
+/* =========================================================================
+   JENIS DANA BOSP: Reguler, Kinerja, Afirmasi
+   Buku Kas Umum dipisah menjadi 3 bagian menurut jenis dana ini (di dalam
+   tahap laporan yang sama) agar saat menyusun/mereset SPJ salah satu jenis
+   dana, data 2 jenis dana lainnya tidak ikut terhapus/tercampur. Pilihan
+   aktif disimpan pada /sekolah/{npsn}/jenisDanaAktif agar tersinkron di
+   semua sesi/perangkat, sama seperti tahapAktif. Transaksi lama yang belum
+   memiliki field jenisDana (dibuat sebelum fitur ini ada) dianggap sebagai
+   'reguler' agar tetap tampil seperti semula (lihat jenisDanaTransaksi()). ---- */
+const JENIS_DANA = {
+  reguler:  { label:'BOSP Reguler',  short:'BOSP Reguler' },
+  kinerja:  { label:'BOS Kinerja',   short:'BOS Kinerja' },
+  afirmasi: { label:'BOS Afirmasi',  short:'BOS Afirmasi' }
+};
+function getDefaultJenisDana(){ return 'reguler'; }
+function jenisDanaTransaksi(t){ return (t && t.jenisDana) || 'reguler'; }
 function isTahapTerkunci(tahap){
   const kunci = state.schoolData && state.schoolData.tahapKunci && state.schoolData.tahapKunci[tahap];
   return !!(kunci && kunci.terkunci);
@@ -2560,6 +2738,106 @@ function hitungRingkasanSekolah(){
   });
 }
 
+/* ---- Tombol nama sekolah yang bisa diklik (dipakai di semua tabel Admin
+   Utama) — membuka modal Detail Sekolah tanpa perlu login sebagai sekolah
+   tersebut. ---- */
+function btnNamaSekolah(npsn, nama){
+  return `<button type="button" data-npsn="${escapeHtml(npsn||'')}" class="btn-buka-detail-sekolah text-navy font-semibold text-left hover:text-gold-600 hover:underline">${escapeHtml(nama||npsn||'—')}</button>`;
+}
+
+/* ---- Modal Detail Sekolah (Admin Utama): ringkasan lengkap satu sekolah,
+   mirip dashboard yang dilihat Admin Sekolah, dirender dari data yang sudah
+   dimuat attachAdminUtamaListeners() (state.allSchools/allUsers/allTransactions)
+   — tidak melakukan pembacaan Firebase tambahan. ---- */
+function openDetailSekolah(npsn){
+  if(!npsn) return;
+  const s = (state.allSchools && state.allSchools[npsn]) || {};
+  const users = state.allUsers || {};
+  const owner = Object.values(users).find(u=>u.npsn===npsn && u.role==='admin_sekolah');
+  const status = owner ? owner.status : 'pending';
+  const txMap = (state.allTransactions && state.allTransactions[npsn]) || {};
+  const txList = Object.values(txMap).sort((a,b)=>(b.updatedAt||b.createdAt||0)-(a.updatedAt||a.createdAt||0));
+
+  const totalPenerimaan = txList.filter(t=>t.jenis==='penerimaan').reduce((sum,t)=>sum+(Number(t.jumlah)||0),0);
+  const totalPengeluaran = txList.filter(t=>t.jenis==='pengeluaran').reduce((sum,t)=>sum+(Number(t.jumlah)||0),0);
+  const saldoAwal = Number(s.saldoAwal)||0;
+  const saldo = saldoAwal + totalPenerimaan - totalPengeluaran;
+  const pengeluaranList = txList.filter(t=>t.jenis==='pengeluaran');
+  const lengkapSpj = pengeluaranList.filter(t=>t.noBukti).length;
+  const persenSpj = pengeluaranList.length>0 ? Math.round((lengkapSpj/pengeluaranList.length)*100) : null;
+  const kepsek = s.kepsek || {};
+  const bendahara = s.bendahara || {};
+
+  const statusBadge = status==='aktif'
+    ? `<span class="text-forest bg-forest-100 text-xs font-semibold px-2 py-1 rounded">Aktif</span>`
+    : status==='nonaktif'
+      ? `<span class="text-rust bg-rust-100 text-xs font-semibold px-2 py-1 rounded">Non-Aktif</span>`
+      : `<span class="text-gold-600 bg-gold-50 text-xs font-semibold px-2 py-1 rounded">Menunggu</span>`;
+  const aksesBadge = s.aksesDikunci===true
+    ? `<span class="text-rust bg-rust-100 text-xs font-semibold px-2 py-1 rounded ml-1">🔒 Menu Terkunci</span>` : '';
+
+  document.getElementById('modal-detail-sekolah-title').textContent = s.namaSekolah || npsn;
+  document.getElementById('modal-detail-sekolah-sub').innerHTML =
+    `NPSN <span class="font-mono">${escapeHtml(npsn)}</span> &nbsp; ${statusBadge}${aksesBadge}`;
+
+  document.getElementById('detail-sekolah-stat-saldo').textContent = fmtRupiah(saldo);
+  document.getElementById('detail-sekolah-stat-penerimaan').textContent = fmtRupiah(totalPenerimaan);
+  document.getElementById('detail-sekolah-stat-pengeluaran').textContent = fmtRupiah(totalPengeluaran);
+  document.getElementById('detail-sekolah-stat-transaksi').textContent = txList.length;
+
+  document.getElementById('detail-sekolah-profil').innerHTML = `
+    <div><dt class="text-xs text-navy-400 uppercase font-semibold">Nama Sekolah</dt><dd class="mt-0.5">${escapeHtml(s.namaSekolah||'—')}</dd></div>
+    <div><dt class="text-xs text-navy-400 uppercase font-semibold">NPSN</dt><dd class="mt-0.5 font-mono">${escapeHtml(npsn||'—')}</dd></div>
+    <div><dt class="text-xs text-navy-400 uppercase font-semibold">Jenjang</dt><dd class="mt-0.5">${escapeHtml(s.jenjang||'—')}</dd></div>
+    <div><dt class="text-xs text-navy-400 uppercase font-semibold">Alamat</dt><dd class="mt-0.5">${escapeHtml(s.alamat||'—')}</dd></div>
+    <div><dt class="text-xs text-navy-400 uppercase font-semibold">Tahun Anggaran</dt><dd class="mt-0.5">${escapeHtml(s.tahunAnggaran||'—')}</dd></div>
+  `;
+
+  document.getElementById('detail-sekolah-pejabat').innerHTML = `
+    <div><dt class="text-xs text-navy-400 uppercase font-semibold">Kepala Sekolah</dt><dd class="mt-0.5">${escapeHtml(kepsek.nama||'—')}${kepsek.nip?` <span class="text-navy-400 font-mono">(NIP ${escapeHtml(kepsek.nip)})</span>`:''}</dd></div>
+    <div><dt class="text-xs text-navy-400 uppercase font-semibold">Bendahara BOSP</dt><dd class="mt-0.5">${escapeHtml(bendahara.nama||'—')}${bendahara.nip?` <span class="text-navy-400 font-mono">(NIP ${escapeHtml(bendahara.nip)})</span>`:''}</dd></div>
+  `;
+
+  document.getElementById('detail-sekolah-stat-spj').innerHTML = persenSpj===null
+    ? '<span class="text-navy-300">—</span>'
+    : `<span class="${persenSpj===100?'text-forest':'text-gold-600'} font-semibold">${persenSpj}%</span> <span class="text-navy-400">(${lengkapSpj}/${pengeluaranList.length})</span>`;
+
+  const pagu1 = Number(s.paguTahap1)||0, pagu2 = Number(s.paguTahap2)||0;
+  document.getElementById('detail-sekolah-pagu').innerHTML = (pagu1||pagu2) ? `
+    <div><dt class="text-xs text-navy-400 uppercase font-semibold">Pagu Tahap 1</dt><dd class="mt-0.5 font-mono">${fmtRupiah(pagu1)}</dd></div>
+    <div><dt class="text-xs text-navy-400 uppercase font-semibold">Pagu Tahap 2</dt><dd class="mt-0.5 font-mono">${fmtRupiah(pagu2)}</dd></div>
+  ` : `<p class="text-sm text-navy-300 col-span-2">Pagu BOSP belum diisi.</p>`;
+
+  const recentTx = txList.slice(0,10);
+  const txRows = recentTx.map(t=>{
+    const jenisLabel = t.jenis==='penerimaan'
+      ? `<span class="text-forest font-semibold">Penerimaan</span>` : `<span class="text-rust font-semibold">Pengeluaran</span>`;
+    return `<tr class="border-b border-navy-50">
+      <td class="py-2 pr-4 font-mono">${escapeHtml(t.tanggal||'—')}</td>
+      <td class="py-2 pr-4">${escapeHtml(t.uraian||'—')}</td>
+      <td class="py-2 pr-4">${jenisLabel}</td>
+      <td class="py-2 pr-4 text-right font-mono">${fmtRupiah(t.jumlah)}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('detail-sekolah-tbl-transaksi').innerHTML = txRows || `<tr><td colspan="4" class="py-4 text-center text-navy-300">Belum ada transaksi tercatat.</td></tr>`;
+  document.getElementById('detail-sekolah-tx-note').textContent = txList.length>10
+    ? `Menampilkan 10 transaksi terbaru dari total ${txList.length} transaksi.` : '';
+
+  document.getElementById('modal-detail-sekolah').classList.remove('hidden');
+}
+function closeDetailSekolah(){
+  document.getElementById('modal-detail-sekolah').classList.add('hidden');
+}
+document.getElementById('modal-detail-sekolah-close').addEventListener('click', closeDetailSekolah);
+document.getElementById('modal-detail-sekolah-close-x').addEventListener('click', closeDetailSekolah);
+// Delegasi klik satu kali di level dokumen — menangani tombol nama sekolah
+// di tabel manapun (yang isinya sering dirender ulang lewat innerHTML) tanpa
+// perlu memasang listener baru setiap kali tabel dirender.
+document.addEventListener('click', (e)=>{
+  const btn = e.target.closest('.btn-buka-detail-sekolah');
+  if(btn) openDetailSekolah(btn.dataset.npsn);
+});
+
 function renderDashboardUtamaStats(){
   if(state.adminDataError){
     document.getElementById('tbl-sekolah-terbaru').innerHTML = `<tr><td colspan="3" class="py-6 text-center text-rust font-semibold">${escapeHtml(state.adminDataError)}</td></tr>`;
@@ -2592,7 +2870,7 @@ function renderDashboardUtamaStats(){
     const badge = status==='aktif'
       ? `<span class="text-forest bg-forest-100 text-xs font-semibold px-2 py-1 rounded">Aktif</span>`
       : `<span class="text-gold-600 bg-gold-50 text-xs font-semibold px-2 py-1 rounded">Menunggu</span>`;
-    return `<tr class="border-b border-navy-50"><td class="py-2 pr-4 font-mono">${s.npsn}</td><td class="py-2 pr-4">${escapeHtml(s.namaSekolah||'')}</td><td class="py-2 pr-4">${badge}</td></tr>`;
+    return `<tr class="border-b border-navy-50"><td class="py-2 pr-4 font-mono">${s.npsn}</td><td class="py-2 pr-4">${btnNamaSekolah(s.npsn, s.namaSekolah)}</td><td class="py-2 pr-4">${badge}</td></tr>`;
   }).join('');
   document.getElementById('tbl-sekolah-terbaru').innerHTML = rows || `<tr><td colspan="3" class="py-4 text-navy-300 text-center">Belum ada sekolah terdaftar.</td></tr>`;
 
@@ -2661,7 +2939,7 @@ function renderManajemenSekolah(){
   const rows = filtered.map(r=>`
     <tr class="border-b border-navy-50">
       <td class="py-3 px-4 font-mono">${escapeHtml(r.npsn)}</td>
-      <td class="py-3 px-4">${escapeHtml(r.namaSekolah)}</td>
+      <td class="py-3 px-4">${btnNamaSekolah(r.npsn, r.namaSekolah)}</td>
       <td class="py-3 px-4">${escapeHtml(r.jenjang)}</td>
       <td class="py-3 px-4">${escapeHtml(r.alamat)}</td>
       <td class="py-3 px-4">${badge(r.status)}</td>
@@ -2688,7 +2966,7 @@ function renderMonitoringLaporan(){
     return `
       <tr class="border-b border-navy-50">
         <td class="py-3 px-4 font-mono">${escapeHtml(r.npsn)}</td>
-        <td class="py-3 px-4">${escapeHtml(r.namaSekolah)}</td>
+        <td class="py-3 px-4">${btnNamaSekolah(r.npsn, r.namaSekolah)}</td>
         <td class="py-3 px-4 text-right font-mono">${r.jumlahTransaksi}</td>
         <td class="py-3 px-4">${lastUpdatedLabel}</td>
         <td class="py-3 px-4">${spjLabel}</td>
@@ -2710,7 +2988,7 @@ function renderRekapitulasi(){
   const rows = ringkasan.map(r=>`
     <tr class="border-b border-navy-50">
       <td class="py-3 px-4 font-mono">${escapeHtml(r.npsn)}</td>
-      <td class="py-3 px-4">${escapeHtml(r.namaSekolah)}</td>
+      <td class="py-3 px-4">${btnNamaSekolah(r.npsn, r.namaSekolah)}</td>
       <td class="py-3 px-4 text-right font-mono">${fmtRupiah(r.totalPenerimaan)}</td>
       <td class="py-3 px-4 text-right font-mono">${fmtRupiah(r.totalPengeluaran)}</td>
       <td class="py-3 px-4 text-right font-mono">${fmtRupiah(r.saldo)}</td>
@@ -2802,7 +3080,7 @@ function renderVerifikasiTable(){
 
     return `<tr class="border-b border-navy-50">
       <td class="py-3 px-4 font-mono">${u.npsn}</td>
-      <td class="py-3 px-4">${escapeHtml(school.namaSekolah||'—')}</td>
+      <td class="py-3 px-4">${school.namaSekolah ? btnNamaSekolah(u.npsn, school.namaSekolah) : escapeHtml('—')}</td>
       <td class="py-3 px-4">${escapeHtml(u.email||'')}</td>
       <td class="py-3 px-4">${statusBadge}${aksesBadge}</td>
       <td class="py-3 px-4 space-x-3 whitespace-nowrap">${actions.join('')}</td>
@@ -3057,6 +3335,8 @@ function attachSchoolListeners(npsn){
     // Sinkronkan tahap laporan aktif dari database (agar konsisten lintas sesi);
     // kalau belum pernah diset, tentukan default berdasarkan bulan berjalan.
     state.tahapAktif = state.schoolData.tahapAktif || getDefaultTahap();
+    // Sinkronkan juga bagian Jenis Dana BOSP aktif (Reguler/Kinerja/Afirmasi) dari database.
+    state.jenisDanaAktif = state.schoolData.jenisDanaAktif || getDefaultJenisDana();
     document.getElementById('sidebar-school-name').textContent = state.schoolData.namaSekolah || npsn;
 
     // Kunci akses (khusus role admin_sekolah): kalau Admin Utama mengunci sekolah ini
@@ -3475,6 +3755,8 @@ function renderDashboardSekolah(){
   document.getElementById('stat-pagu-bar').classList.toggle('bg-rust', pagu>0 && pengeluaranTahap>pagu);
   document.getElementById('stat-pagu-bar').classList.toggle('bg-gold-400', !(pagu>0 && pengeluaranTahap>pagu));
 
+  renderStatusPaguJenisDana(tahapAktif);
+  renderProgresJenisDana(tahapAktif);
   renderChartKelompokBelanja();
 
   document.getElementById('dashboard-profil').innerHTML = `
@@ -3526,6 +3808,98 @@ function renderDashboardSekolah(){
   document.getElementById('kepsek-chart-penyerapan').innerHTML = chartHtml || `<p class="text-sm text-navy-300 text-center py-4">Belum ada transaksi pengeluaran.</p>`;
 }
 
+/* ---- Data status realisasi per Jenis Dana BOSP (dipakai bareng oleh kartu
+   "Realisasi Terhadap Pagu BOSP" — badge ringkas — dan kartu "Progres
+   Realisasi per Jenis Dana BOSP" — progress bar detail). Satu sumber logika
+   supaya kriteria "jenis dana yang ada" & perhitungan persentase selalu
+   konsisten di kedua tempat. ---- */
+function hitungStatusJenisDana(tahapAktif){
+  const s = state.schoolData || {};
+  const paguJd = s.paguJenisDana || {};
+  const tahapKey = tahapAktif==='2' ? 'tahap2' : 'tahap1';
+
+  return Object.keys(JENIS_DANA).filter(jd=>{
+    const pagu = Number((paguJd[jd]||{})[tahapKey])||0;
+    const punyaTransaksi = state.transactions.some(t=>jenisDanaTransaksi(t)===jd);
+    return pagu>0 || punyaTransaksi;
+  }).map(jd=>{
+    const pagu = Number((paguJd[jd]||{})[tahapKey])||0;
+    const realisasi = state.transactions
+      .filter(t=>t.jenis==='pengeluaran' && bulanDalamTahap(t.tanggal, tahapAktif) && jenisDanaTransaksi(t)===jd)
+      .reduce((sum,t)=>sum+(Number(t.jumlah)||0), 0);
+    const persen = pagu>0 ? Math.min(100, Math.round((realisasi/pagu)*100)) : 0;
+    const overBudget = pagu>0 && realisasi>pagu;
+    return { jd, label: JENIS_DANA[jd].label, pagu, realisasi, persen, overBudget };
+  });
+}
+
+/* ---- Status ringkas per Jenis Dana BOSP — badge kecil pada kartu
+   "Realisasi Terhadap Pagu BOSP" ---- */
+function renderStatusPaguJenisDana(tahapAktif){
+  const wrap = document.getElementById('stat-pagu-status-jenisdana');
+  if(!wrap) return;
+  const data = hitungStatusJenisDana(tahapAktif);
+  if(data.length===0){ wrap.innerHTML = ''; return; }
+
+  wrap.innerHTML = data.map(d=>{
+    let cls, teks;
+    if(d.pagu<=0){
+      cls = 'bg-navy-50 text-navy-400';
+      teks = `${d.label}: pagu belum diisi`;
+    } else if(d.overBudget){
+      cls = 'bg-rust-100 text-rust';
+      teks = `${d.label}: melebihi pagu`;
+    } else if(d.persen>=100){
+      cls = 'bg-forest-100 text-forest';
+      teks = `${d.label}: 100% terealisasi`;
+    } else {
+      cls = 'bg-gold-50 text-gold-600';
+      teks = `${d.label}: ${d.persen}% terealisasi`;
+    }
+    return `<span class="text-xs font-semibold px-2 py-1 rounded ${cls}">${escapeHtml(teks)}</span>`;
+  }).join('');
+}
+
+/* ---- Progres Realisasi per Jenis Dana BOSP (Dashboard Sekolah) ----
+   Menampilkan satu progress bar untuk tiap jenis dana BOSP (Reguler/Kinerja/
+   Afirmasi) yang memang "ada" pada sekolah ini — yaitu yang pagu-nya sudah
+   diisi (lihat Pagu per Jenis Dana BOSP di Profil Sekolah) DAN/ATAU sudah
+   pernah dicatat transaksinya di BKU. Jenis dana yang pagunya kosong dan
+   belum pernah ada transaksinya dianggap tidak diterima sekolah ini sehingga
+   tidak ditampilkan, supaya kartu ini tidak dipenuhi baris kosong untuk
+   BOS Kinerja/Afirmasi pada sekolah yang memang tidak menerimanya. ---- */
+function renderProgresJenisDana(tahapAktif){
+  const listEl = document.getElementById('progres-jenisdana-list');
+  const labelEl = document.getElementById('progres-jenisdana-tahap-label');
+  if(!listEl) return;
+  if(labelEl) labelEl.textContent = `— ${TAHAP_PERIODE[tahapAktif].short}`;
+
+  const data = hitungStatusJenisDana(tahapAktif);
+
+  if(data.length===0){
+    listEl.innerHTML = `<p class="text-sm text-navy-300 text-center py-4">Belum ada data jenis dana BOSP. Catat transaksi di Buku Kas Umum dan/atau isi Pagu per Jenis Dana BOSP di Profil Sekolah.</p>`;
+    return;
+  }
+
+  listEl.innerHTML = data.map(d=>{
+    const barColor = d.overBudget ? 'bg-rust' : 'bg-gold-400';
+    const keteranganKanan = d.pagu>0
+      ? `${d.persen}% dari pagu ${fmtRupiah(d.pagu)}`
+      : `Pagu belum diisi`;
+    return `
+      <div>
+        <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-sm mb-1">
+          <span class="font-semibold text-navy">${escapeHtml(d.label)}</span>
+          <span class="font-mono text-xs text-navy-400">${fmtRupiah(d.realisasi)}</span>
+        </div>
+        <div class="w-full h-2.5 bg-navy-50 rounded-full overflow-hidden">
+          <div class="h-full ${barColor} rounded-full transition-all" style="width:${d.pagu>0 ? d.persen : 0}%"></div>
+        </div>
+        <div class="text-xs text-navy-400 mt-1">${escapeHtml(keteranganKanan)}</div>
+      </div>`;
+  }).join('');
+}
+
 /* ---- Grafik donat "Pengelompokan Belanja" (Dashboard Sekolah) ----
    Mengelompokkan seluruh transaksi pengeluaran berdasarkan field
    "kelompokBelanja" (sama seperti yang dipakai Kertas Kerja 2.2.1),
@@ -3546,16 +3920,17 @@ function renderChartKelompokBelanja(){
   const totalEl = document.getElementById('donut-total-belanja');
   if(!svg || !legendEl) return;
 
-  // Mengikuti Tahap Laporan BOSP yang sedang aktif, sama seperti Buku Kas
-  // Umum & Kertas Kerja 2.2.1, agar grafik tidak mencampur realisasi Tahap 1
-  // dan Tahap 2.
+  // Mengikuti Tahap Laporan BOSP & Jenis Dana BOSP yang sedang aktif, sama
+  // seperti Buku Kas Umum & Kertas Kerja 2.2.1, agar grafik tidak mencampur
+  // realisasi antar tahap maupun antar jenis dana.
   const tahapAktifChart = state.tahapAktif || getDefaultTahap();
+  const jenisDanaChart = state.jenisDanaAktif || getDefaultJenisDana();
   const labelTahapEl = document.getElementById('donut-tahap-label');
-  if(labelTahapEl) labelTahapEl.textContent = `— ${TAHAP_PERIODE[tahapAktifChart].short}`;
+  if(labelTahapEl) labelTahapEl.textContent = `— ${JENIS_DANA[jenisDanaChart].short} — ${TAHAP_PERIODE[tahapAktifChart].short}`;
 
   const totals = {};
   state.transactions
-    .filter(t=>t.jenis==='pengeluaran' && bulanDalamTahap(t.tanggal, tahapAktifChart))
+    .filter(t=>t.jenis==='pengeluaran' && bulanDalamTahap(t.tanggal, tahapAktifChart) && jenisDanaTransaksi(t)===jenisDanaChart)
     .forEach(t=>{
       const key = (t.kelompokBelanja && KELOMPOK_BELANJA_LABELS[t.kelompokBelanja]) ? t.kelompokBelanja : 'lainnya';
       totals[key] = (totals[key]||0) + (Number(t.jumlah)||0);
@@ -3621,6 +3996,15 @@ function fillProfilForm(){
   document.getElementById('profil-pagu-tahap1').value = s.paguTahap1 || '';
   document.getElementById('profil-pagu-tahap2').value = s.paguTahap2 || '';
 
+  // Pagu per Jenis Dana BOSP (opsional) — lihat catatan pada renderDashboardSekolah/
+  // hitungProgresJenisDana untuk bagaimana nilai ini dipakai di Dashboard.
+  const paguJd = s.paguJenisDana || {};
+  ['reguler','kinerja','afirmasi'].forEach(jd=>{
+    const nilai = paguJd[jd] || {};
+    document.getElementById(`profil-pagu-jd-${jd}-1`).value = nilai.tahap1 || '';
+    document.getElementById(`profil-pagu-jd-${jd}-2`).value = nilai.tahap2 || '';
+  });
+
   const kop = s.kopSurat || {};
   document.getElementById('kop-baris1').value = kop.baris1 || '';
   document.getElementById('kop-baris2').value = kop.baris2 || '';
@@ -3644,7 +4028,21 @@ document.getElementById('form-profil').addEventListener('submit', async (e)=>{
       tahunAnggaran: document.getElementById('profil-tahun').value.trim(),
       saldoAwal: Number(document.getElementById('profil-saldo-awal').value)||0,
       paguTahap1: Number(document.getElementById('profil-pagu-tahap1').value)||0,
-      paguTahap2: Number(document.getElementById('profil-pagu-tahap2').value)||0
+      paguTahap2: Number(document.getElementById('profil-pagu-tahap2').value)||0,
+      paguJenisDana: {
+        reguler: {
+          tahap1: Number(document.getElementById('profil-pagu-jd-reguler-1').value)||0,
+          tahap2: Number(document.getElementById('profil-pagu-jd-reguler-2').value)||0
+        },
+        kinerja: {
+          tahap1: Number(document.getElementById('profil-pagu-jd-kinerja-1').value)||0,
+          tahap2: Number(document.getElementById('profil-pagu-jd-kinerja-2').value)||0
+        },
+        afirmasi: {
+          tahap1: Number(document.getElementById('profil-pagu-jd-afirmasi-1').value)||0,
+          tahap2: Number(document.getElementById('profil-pagu-jd-afirmasi-2').value)||0
+        }
+      }
     });
     logAudit('Profil Sekolah', 'ubah', 'Ubah Profil Sekolah (data umum/saldo awal/pagu tahap)');
     alertFix('Profil sekolah tersimpan.');
@@ -3835,15 +4233,19 @@ document.getElementById('form-akun-kepsek').addEventListener('submit', async (e)
    ========================================================================= */
 function renderBKU(){
   syncTahapUI();
+  syncJenisDanaUI();
 
   const readOnlyKepsek = state.userData.role === 'kepala_sekolah';
   const tahap = state.tahapAktif || getDefaultTahap();
+  const jenisDana = state.jenisDanaAktif || getDefaultJenisDana();
   const terkunci = isTahapTerkunci(tahap);
   const bisaUbah = !readOnlyKepsek && !terkunci;
 
-  // Hanya tampilkan transaksi pada periode tahap yang sedang aktif, supaya
-  // data Tahap 1 dan Tahap 2 tidak tercampur pada satu tampilan BKU.
-  const txTahapIni = state.transactions.filter(t=>bulanDalamTahap(t.tanggal, tahap));
+  // Hanya tampilkan transaksi pada periode tahap DAN jenis dana yang sedang
+  // aktif, supaya data Tahap 1/2 dan data BOSP Reguler/BOS Kinerja/BOS
+  // Afirmasi tidak tercampur pada satu tampilan BKU — dan supaya membuat
+  // atau mereset SPJ salah satu jenis dana tidak menghapus data jenis dana lain.
+  const txTahapIni = state.transactions.filter(t=>bulanDalamTahap(t.tanggal, tahap) && jenisDanaTransaksi(t)===jenisDana);
 
   const rows = txTahapIni.map(t=>{
     const isPenerimaan = t.jenis==='penerimaan';
@@ -3867,7 +4269,7 @@ function renderBKU(){
     </tr>`;
   }).join('');
 
-  document.getElementById('tbl-bku').innerHTML = rows || `<tr><td colspan="11" class="py-8 text-center text-navy-300 font-sans">Belum ada transaksi pada ${escapeHtml(TAHAP_PERIODE[tahap].label)}. ${bisaUbah ? 'Klik "+ Transaksi" untuk menambahkan.' : ''}</td></tr>`;
+  document.getElementById('tbl-bku').innerHTML = rows || `<tr><td colspan="11" class="py-8 text-center text-navy-300 font-sans">Belum ada transaksi ${escapeHtml(JENIS_DANA[jenisDana].label)} pada ${escapeHtml(TAHAP_PERIODE[tahap].label)}. ${bisaUbah ? 'Klik "+ Transaksi" untuk menambahkan.' : ''}</td></tr>`;
 
   document.querySelectorAll('.btn-edit-tx').forEach(b=>b.addEventListener('click', ()=>openTransaksiModal(b.dataset.id)));
   document.querySelectorAll('.btn-hapus-tx').forEach(b=>b.addEventListener('click', async ()=>{
@@ -3942,6 +4344,20 @@ function syncTahapUI(){
   }
 }
 
+/* ---- Sinkronkan tampilan bar Jenis Dana BOSP (tab aktif) ---- */
+function syncJenisDanaUI(){
+  const tabBar = document.getElementById('bku-jenisdana-bar');
+  if(!tabBar) return;
+  const jenisDana = state.jenisDanaAktif || getDefaultJenisDana();
+
+  document.querySelectorAll('.jenisdana-tab').forEach(b=>{
+    const aktif = b.dataset.jenisdana === jenisDana;
+    b.classList.toggle('bg-navy', aktif); b.classList.toggle('text-white', aktif);
+    b.classList.toggle('bg-white', !aktif); b.classList.toggle('border', !aktif);
+    b.classList.toggle('border-navy-200', !aktif); b.classList.toggle('text-navy', !aktif);
+  });
+}
+
 function formatTanggal(iso){
   if(!iso) return '—';
   const [y,m,d] = iso.split('-');
@@ -3964,17 +4380,18 @@ document.getElementById('btn-batal-transaksi').addEventListener('click', ()=>clo
    Transaksi pada tahap lain TIDAK ikut terhapus. ---- */
 document.getElementById('btn-reset-bku').addEventListener('click', async ()=>{
   const tahap = state.tahapAktif || getDefaultTahap();
+  const jenisDana = state.jenisDanaAktif || getDefaultJenisDana();
   if(isTahapTerkunci(tahap)){
     alertFix(`${TAHAP_PERIODE[tahap].label} sedang terkunci. Buka kunci tahap terlebih dahulu untuk mereset data.`);
     return;
   }
-  const txTahapIni = state.transactions.filter(t=>bulanDalamTahap(t.tanggal, tahap));
+  const txTahapIni = state.transactions.filter(t=>bulanDalamTahap(t.tanggal, tahap) && jenisDanaTransaksi(t)===jenisDana);
   if(txTahapIni.length === 0){
-    alertFix('Tidak ada transaksi pada tahap ini untuk direset.');
+    alertFix('Tidak ada transaksi pada bagian jenis dana ini untuk direset.');
     return;
   }
-  const label = TAHAP_PERIODE[tahap].label;
-  const konfirmasiAwal = confirmFix(`Reset seluruh data Buku Kas Umum pada ${label}?\n\nTindakan ini akan menghapus SEMUA ${txTahapIni.length} transaksi pada periode ini sekaligus dan TIDAK DAPAT DIBATALKAN. Transaksi pada tahap lain tidak akan terpengaruh.`);
+  const label = `${JENIS_DANA[jenisDana].label} — ${TAHAP_PERIODE[tahap].label}`;
+  const konfirmasiAwal = confirmFix(`Reset seluruh data Buku Kas Umum pada ${label}?\n\nTindakan ini akan menghapus SEMUA ${txTahapIni.length} transaksi pada bagian jenis dana & periode ini sekaligus dan TIDAK DAPAT DIBATALKAN. Transaksi pada jenis dana lain dan tahap lain TIDAK akan terpengaruh.`);
   if(!konfirmasiAwal) return;
   const ketikan = await showPromptModal(
     `Untuk melanjutkan, ketik RESET (huruf besar) untuk menghapus ${txTahapIni.length} transaksi pada ${label}:`
@@ -4026,6 +4443,44 @@ document.querySelectorAll('.tahap-tab').forEach(btn=>{
       await db.ref('sekolah/'+state.userData.npsn+'/tahapAktif').set(tahap);
     }catch(err){
       console.error('Gagal menyimpan tahap aktif:', err);
+    }
+  });
+});
+
+/* ---- Tab Jenis Dana BOSP: pindah bagian aktif (Reguler/Kinerja/Afirmasi) ----
+   Mengikuti pola yang sama seperti Tab Tahap Laporan di atas, sehingga Buku
+   Kas Umum, Kertas Kerja 2.2.1, SPPD, Dashboard, dan Cetak Dokumen SPJ hanya
+   bekerja pada satu bagian dana dalam satu waktu. */
+document.querySelectorAll('.jenisdana-tab').forEach(btn=>{
+  btn.addEventListener('click', async ()=>{
+    const jenisDana = btn.dataset.jenisdana;
+    if(jenisDana === state.jenisDanaAktif) return;
+    state.jenisDanaAktif = jenisDana;
+    renderBKU();
+    state.cetakSelection.clear();
+    if(['kwitansi','nota','bast','lampiran'].includes(state.cetakDoc)){
+      renderCetakList();
+    }
+    // Sinkronkan juga dropdown "Jenis Dana BOSP" pada panel Kafer (Sampul
+    // Laporan) dan SPTJM — sebelumnya kedua dropdown ini hanya mengikuti
+    // tab aktif SEKALI saat panel pertama dibuka (lihat dataset.inited di
+    // initKaferFields/initSptjmFields), lalu terkunci ke pilihan lama walau
+    // admin pindah tab Jenis Dana BOSP di Buku Kas Umum. Ini yang membuat
+    // data Kafer/SPTJM bisa tercampur dengan jenis dana yang tidak sedang
+    // aktif dan membingungkan saat mencetak. Update langsung di sini supaya
+    // kedua dropdown selalu ikut tab yang baru diklik.
+    const selKaferJenisDana = document.getElementById('kafer-jenisdana');
+    if(selKaferJenisDana){ selKaferJenisDana.value = jenisDana; selKaferJenisDana.dataset.inited = '1'; }
+    const selSptjmJenisDana = document.getElementById('sptjm-jenisdana');
+    if(selSptjmJenisDana){ selSptjmJenisDana.value = jenisDana; selSptjmJenisDana.dataset.inited = '1'; }
+    if(state.currentView === 'sppd') renderSppd();
+    if(state.currentView === 'dashboard-sekolah') renderDashboardSekolah();
+    if(state.currentView === 'kk221') renderKk221Table();
+    if(state.userData.role === 'kepala_sekolah') return;
+    try{
+      await db.ref('sekolah/'+state.userData.npsn+'/jenisDanaAktif').set(jenisDana);
+    }catch(err){
+      console.error('Gagal menyimpan jenis dana aktif:', err);
     }
   });
 });
@@ -4121,6 +4576,12 @@ function openTransaksiModal(id){
     return;
   }
 
+  const jenisDanaModalEl = document.getElementById('modal-transaksi-jenisdana');
+  if(jenisDanaModalEl){
+    const jd = state.jenisDanaAktif || getDefaultJenisDana();
+    jenisDanaModalEl.textContent = JENIS_DANA[jd].label;
+  }
+
   // Batasi tanggal yang bisa dipilih agar tetap berada pada periode tahap
   // aktif — mencegah transaksi tahap lain tercampur masuk secara tidak sengaja.
   const { min, max } = rentangTanggalTahap(tahap);
@@ -4197,6 +4658,7 @@ document.getElementById('form-transaksi').addEventListener('submit', async (e)=>
     lampiran: document.getElementById('tx-lampiran').checked,
     lampiranPenerima: collectLampiranRows(),
     perjalananDinas: document.getElementById('tx-perjalanan-dinas').checked,
+    jenisDana: state.jenisDanaAktif || getDefaultJenisDana(),
     updatedAt: Date.now()
   };
   try{
@@ -5166,11 +5628,12 @@ function buildOpnameKasDocument(t){
    tidak perlu koleksi/listener Firebase baru.
    ========================================================================= */
 function renderSppd(){
-  // Daftar SPPD ikut Tahap Laporan BOSP yang sedang aktif (sama seperti Buku
-  // Kas Umum & panel Cetak), supaya transaksi Perjalanan Dinas dari tahap
-  // lain tidak ikut tercampur/tercetak di sini.
+  // Daftar SPPD ikut Tahap Laporan BOSP & Jenis Dana BOSP yang sedang aktif
+  // (sama seperti Buku Kas Umum & panel Cetak), supaya transaksi Perjalanan
+  // Dinas dari tahap/jenis dana lain tidak ikut tercampur/tercetak di sini.
   const tahapAktifSppd = state.tahapAktif || getDefaultTahap();
-  const list = state.transactions.filter(t=>t.perjalananDinas && bulanDalamTahap(t.tanggal, tahapAktifSppd));
+  const jenisDanaSppd = state.jenisDanaAktif || getDefaultJenisDana();
+  const list = state.transactions.filter(t=>t.perjalananDinas && bulanDalamTahap(t.tanggal, tahapAktifSppd) && jenisDanaTransaksi(t)===jenisDanaSppd);
   const rows = list.map(t=>{
     const namaPegawai = (t.sppd && t.sppd.namaPegawai) || t.penerima || '';
     return `<tr class="border-b border-navy-50">
@@ -5183,7 +5646,7 @@ function renderSppd(){
       </td>
     </tr>`;
   }).join('');
-  document.getElementById('tbl-sppd').innerHTML = rows || `<tr><td colspan="5" class="py-8 text-center text-navy-300 font-sans">Belum ada transaksi yang ditandai Perjalanan Dinas pada ${escapeHtml(TAHAP_PERIODE[tahapAktifSppd].label)}. Centang "Perjalanan Dinas (tampilkan pada menu SPPD)" pada form Tambah/Ubah Transaksi.</td></tr>`;
+  document.getElementById('tbl-sppd').innerHTML = rows || `<tr><td colspan="5" class="py-8 text-center text-navy-300 font-sans">Belum ada transaksi yang ditandai Perjalanan Dinas pada ${escapeHtml(JENIS_DANA[jenisDanaSppd].label)} — ${escapeHtml(TAHAP_PERIODE[tahapAktifSppd].label)}. Centang "Perjalanan Dinas (tampilkan pada menu SPPD)" pada form Tambah/Ubah Transaksi.</td></tr>`;
   document.querySelectorAll('.btn-buka-sppd').forEach(b=>b.addEventListener('click', ()=>openSppdModal(b.dataset.id)));
 }
 
@@ -5945,6 +6408,7 @@ function parseTanggalFleksibel(val){
 }
 function transaksiToRow(t){
   return {
+    'Jenis Dana BOSP': JENIS_DANA[jenisDanaTransaksi(t)].label,
     [FIELD_LABELS.tanggal]: t.tanggal || '',
     [FIELD_LABELS.kode]: t.kode || '',
     [FIELD_LABELS.noBukti]: t.noBukti || '',
@@ -5980,6 +6444,7 @@ document.getElementById('input-import-csv').addEventListener('change', (e)=>{
 
   const finishImport = async (rawRows)=>{
     const tahapImport = state.tahapAktif || getDefaultTahap();
+    const jenisDanaImport = state.jenisDanaAktif || getDefaultJenisDana();
     if(isTahapTerkunci(tahapImport)){
       showImportFeedback(false, `${TAHAP_PERIODE[tahapImport].label} sedang terkunci. Buka kunci tahap terlebih dahulu untuk mengimpor data.`);
       e.target.value = '';
@@ -6034,6 +6499,7 @@ document.getElementById('input-import-csv').addEventListener('change', (e)=>{
         nipPenerima: String(f.nipPenerima||'').trim(),
         jabatan: String(f.jabatan||'').trim(),
         lampiran: /^(ya|yes|true|1)$/i.test(String(f.lampiran||'').trim()),
+        jenisDana: jenisDanaImport,
         createdAt: Date.now()
       };
       validCount++;
@@ -6048,11 +6514,11 @@ document.getElementById('input-import-csv').addEventListener('change', (e)=>{
 
     try{
       await db.ref('transaksi_bku/'+npsn).update(updates);
-      logAudit('Buku Kas Umum', 'import', `Import ${validCount} transaksi ke ${TAHAP_PERIODE[tahapImport].label} dari berkas ${file.name}`);
+      logAudit('Buku Kas Umum', 'import', `Import ${validCount} transaksi ke ${JENIS_DANA[jenisDanaImport].label} — ${TAHAP_PERIODE[tahapImport].label} dari berkas ${file.name}`);
       const catatan = [];
       if(skipped) catatan.push(skipped+' baris dilewati karena data tidak lengkap');
       if(skippedBedaTahap) catatan.push(skippedBedaTahap+' baris dilewati karena di luar periode '+TAHAP_PERIODE[tahapImport].label);
-      showImportFeedback(true, `${validCount} transaksi berhasil diimpor ke ${TAHAP_PERIODE[tahapImport].label}${catatan.length? ' ('+catatan.join('; ')+')':''}. Saldo dihitung ulang otomatis.`);
+      showImportFeedback(true, `${validCount} transaksi berhasil diimpor ke bagian ${JENIS_DANA[jenisDanaImport].label} — ${TAHAP_PERIODE[tahapImport].label}${catatan.length? ' ('+catatan.join('; ')+')':''}. Saldo dihitung ulang otomatis.`);
     }catch(err){
       showImportFeedback(false, 'Gagal mengimpor transaksi: ' + (err.message || 'Terjadi kesalahan. Periksa koneksi internet Anda dan coba lagi.'));
     }
@@ -6213,16 +6679,17 @@ function renderCetakList(){
   // pada menu Cetak Lampiran" di form Tambah Transaksi — bukan seluruh pengeluaran.
   //
   // Sama seperti tabel BKU, daftar cetak (Kwitansi/Nota/BAST/Lampiran) HARUS
-  // dibatasi pada transaksi periode Tahap Laporan yang sedang aktif saja.
-  // Tanpa filter ini, transaksi Tahap 1 & Tahap 2 tercampur di satu daftar
-  // centang sehingga admin bisa salah pilih & mencetak kwitansi dari tahap
-  // yang tidak sedang dikerjakan.
+  // dibatasi pada transaksi periode Tahap Laporan & Jenis Dana BOSP yang
+  // sedang aktif saja. Tanpa filter ini, transaksi tahap/jenis dana lain
+  // tercampur di satu daftar centang sehingga admin bisa salah pilih &
+  // mencetak kwitansi dari tahap/jenis dana yang tidak sedang dikerjakan.
   const tahapAktifCetak = state.tahapAktif || getDefaultTahap();
+  const jenisDanaAktifCetak = state.jenisDanaAktif || getDefaultJenisDana();
   const isLampiran = state.cetakDoc === 'lampiran';
   const list = (isLampiran
     ? state.transactions.filter(t=>t.lampiran)
     : state.transactions.filter(t=>t.jenis==='pengeluaran')
-  ).filter(t=>bulanDalamTahap(t.tanggal, tahapAktifCetak));
+  ).filter(t=>bulanDalamTahap(t.tanggal, tahapAktifCetak) && jenisDanaTransaksi(t)===jenisDanaAktifCetak);
 
   // Buang id yang sudah dicentang tapi transaksinya sudah tidak ada lagi di
   // daftar ini (mis. terhapus/berubah jenis), supaya cetakSelection tidak
@@ -6484,10 +6951,16 @@ document.getElementById('btn-cetak-hadir-print').addEventListener('click', ()=>{
 function initKaferFields(){
   const s = state.schoolData || {};
   const tahap = state.tahapAktif || getDefaultTahap();
+  const jenisDana = state.jenisDanaAktif || getDefaultJenisDana();
   const selTahap = document.getElementById('kafer-tahap');
   if(selTahap.dataset.inited !== '1'){
     selTahap.value = tahap;
     selTahap.dataset.inited = '1';
+  }
+  const selJenisDana = document.getElementById('kafer-jenisdana');
+  if(selJenisDana.dataset.inited !== '1'){
+    selJenisDana.value = jenisDana;
+    selJenisDana.dataset.inited = '1';
   }
   const tahunEl = document.getElementById('kafer-tahun');
   if(!tahunEl.value) tahunEl.value = s.tahunAnggaran || new Date().getFullYear();
@@ -6498,6 +6971,7 @@ function initKaferFields(){
 document.getElementById('btn-cetak-kafer-print').addEventListener('click', ()=>{
   const kaferHeader = {
     tahap: document.getElementById('kafer-tahap').value,
+    jenisDana: document.getElementById('kafer-jenisdana').value,
     tahun: document.getElementById('kafer-tahun').value.trim(),
     judul: document.getElementById('kafer-judul').value.trim(),
     kecamatan: document.getElementById('kafer-kecamatan').value.trim(),
@@ -6518,10 +6992,16 @@ document.getElementById('btn-cetak-kafer-print').addEventListener('click', ()=>{
 function initSptjmFields(){
   const s = state.schoolData || {};
   const tahap = state.tahapAktif || getDefaultTahap();
+  const jenisDana = state.jenisDanaAktif || getDefaultJenisDana();
   const selTahap = document.getElementById('sptjm-tahap');
   if(selTahap.dataset.inited !== '1'){
     selTahap.value = tahap;
     selTahap.dataset.inited = '1';
+  }
+  const selJenisDana = document.getElementById('sptjm-jenisdana');
+  if(selJenisDana.dataset.inited !== '1'){
+    selJenisDana.value = jenisDana;
+    selJenisDana.dataset.inited = '1';
   }
   const tahunEl = document.getElementById('sptjm-tahun');
   if(!tahunEl.value) tahunEl.value = s.tahunAnggaran || new Date().getFullYear();
@@ -6534,11 +7014,12 @@ function buildSptjmDocument(sptjmHeader){
   const bendahara = s.bendahara || {};
   const root = document.getElementById('print-root');
   const tahapInfo = TAHAP_PERIODE[sptjmHeader.tahap] || TAHAP_PERIODE['1'];
+  const jenisDanaInfo = JENIS_DANA[sptjmHeader.jenisDana] || JENIS_DANA['reguler'];
   const kopHtml = buildKopSuratHtml(s);
   const box = 'border:1px solid #16324F; padding:20px; margin-bottom:16px; page-break-inside:avoid; font-family:Inter,sans-serif; font-size:13px; color:#23262B;';
 
   const totalRealisasi = state.transactions
-    .filter(t=>t.jenis==='pengeluaran' && bulanDalamTahap(t.tanggal, sptjmHeader.tahap))
+    .filter(t=>t.jenis==='pengeluaran' && bulanDalamTahap(t.tanggal, sptjmHeader.tahap) && jenisDanaTransaksi(t)===sptjmHeader.jenisDana)
     .reduce((sum,t)=>sum+(Number(t.jumlah)||0),0);
 
   const bodyHtml = `
@@ -6555,7 +7036,7 @@ function buildSptjmDocument(sptjmHeader){
 
       <div style="font-size:13px; margin-bottom:6px; text-align:justify;">Dengan ini menyatakan dengan sesungguhnya bahwa:</div>
       <ol style="font-size:13px; margin:0 0 12px 18px; padding:0; text-align:justify; line-height:1.7;">
-        <li>Belanja yang tercantum dalam Buku Kas Umum (BKU) periode <b>${escapeHtml(tahapInfo.label)}</b> Tahun Anggaran <b>${escapeHtml(sptjmHeader.tahun||'-')}</b> pada ${escapeHtml(s.namaSekolah||'')} telah dilaksanakan sesuai dengan Rencana Kegiatan dan Anggaran Sekolah (RKAS/RKAS-P) yang telah ditetapkan;</li>
+        <li>Belanja yang tercantum dalam Buku Kas Umum (BKU) <b>${escapeHtml(jenisDanaInfo.label)}</b> periode <b>${escapeHtml(tahapInfo.label)}</b> Tahun Anggaran <b>${escapeHtml(sptjmHeader.tahun||'-')}</b> pada ${escapeHtml(s.namaSekolah||'')} telah dilaksanakan sesuai dengan Rencana Kegiatan dan Anggaran Sekolah (RKAS/RKAS-P) yang telah ditetapkan;</li>
         <li>Bukti-bukti pengeluaran sebagaimana tercatat dan/atau terlampir adalah sah, benar, dan telah diverifikasi kebenarannya sebelum dibayarkan;</li>
         <li>Apabila di kemudian hari ditemukan ketidaksesuaian dan/atau kerugian negara/daerah akibat kesalahan atau kelalaian dalam pengelolaan dana dimaksud, kami bersedia bertanggung jawab dan menyetorkan kembali ke Kas Negara/Daerah sesuai ketentuan peraturan perundang-undangan yang berlaku;</li>
         <li>Pernyataan ini dibuat dengan sebenar-benarnya untuk digunakan sebagaimana mestinya sebagai kelengkapan laporan pertanggungjawaban penggunaan dana BOSP.</li>
@@ -6673,10 +7154,12 @@ document.querySelectorAll('.kk221-tab').forEach(btn=>{
 });
 
 function getKk221Items(){
-  // Kertas Kerja 2.2.1 ikut Tahap Laporan BOSP yang sedang aktif, agar
-  // rincian kategori belanja tidak mencampur transaksi Tahap 1 & Tahap 2.
+  // Kertas Kerja 2.2.1 ikut Tahap Laporan BOSP & Jenis Dana BOSP yang sedang
+  // aktif, agar rincian kategori belanja tidak mencampur transaksi antar
+  // tahap maupun antar jenis dana.
   const tahapAktifKk221 = state.tahapAktif || getDefaultTahap();
-  return state.transactions.filter(t=>t.jenis==='pengeluaran' && t.kelompokBelanja===state.kk221Tab && bulanDalamTahap(t.tanggal, tahapAktifKk221));
+  const jenisDanaAktifKk221 = state.jenisDanaAktif || getDefaultJenisDana();
+  return state.transactions.filter(t=>t.jenis==='pengeluaran' && t.kelompokBelanja===state.kk221Tab && bulanDalamTahap(t.tanggal, tahapAktifKk221) && jenisDanaTransaksi(t)===jenisDanaAktifKk221);
 }
 
 function renderKk221Table(){
@@ -6693,10 +7176,11 @@ function renderKk221Table(){
       <td class="py-2 px-3 text-right">${fmtRupiah(t.jumlah)}</td>
     </tr>`).join('');
   const tahapAktifKk221Label = state.tahapAktif || getDefaultTahap();
-  document.getElementById('tbl-kk221').innerHTML = rows || `<tr><td colspan="8" class="py-8 text-center text-navy-300 font-sans">Belum ada transaksi pengeluaran yang ditandai "${KK221_LABELS[state.kk221Tab]}" pada ${escapeHtml(TAHAP_PERIODE[tahapAktifKk221Label].label)}. Tandai kelompok belanja pada form Tambah/Ubah Transaksi di Buku Kas Umum.</td></tr>`;
+  const jenisDanaAktifKk221Label = state.jenisDanaAktif || getDefaultJenisDana();
+  document.getElementById('tbl-kk221').innerHTML = rows || `<tr><td colspan="8" class="py-8 text-center text-navy-300 font-sans">Belum ada transaksi pengeluaran yang ditandai "${KK221_LABELS[state.kk221Tab]}" pada ${escapeHtml(JENIS_DANA[jenisDanaAktifKk221Label].label)} — ${escapeHtml(TAHAP_PERIODE[tahapAktifKk221Label].label)}. Tandai kelompok belanja pada form Tambah/Ubah Transaksi di Buku Kas Umum.</td></tr>`;
   const total = items.reduce((s,t)=>s+(Number(t.jumlah)||0),0);
   document.getElementById('kk221-total').textContent = fmtRupiah(total);
-  document.getElementById('kk221-label').textContent = `${KK221_LABELS[state.kk221Tab]} — ${TAHAP_PERIODE[tahapAktifKk221Label].short}`;
+  document.getElementById('kk221-label').textContent = `${KK221_LABELS[state.kk221Tab]} — ${JENIS_DANA[jenisDanaAktifKk221Label].short} — ${TAHAP_PERIODE[tahapAktifKk221Label].short}`;
 }
 
 document.getElementById('btn-kk221-xlsx').addEventListener('click', ()=>{
@@ -6751,6 +7235,7 @@ function buildKk221Document(kelompok, items){
     <div style="${box}">
       <div style="text-align:center; font-family:Lora,serif; font-weight:700; font-size:15px; letter-spacing:1px;">KERTAS KERJA UNIT 2.2.1</div>
       <div style="text-align:center; font-size:13px; font-weight:700; margin-bottom:4px; text-transform:uppercase;">${escapeHtml(KK221_LABELS[kelompok]||'')}</div>
+      <div style="text-align:center; font-size:12px; margin-bottom:2px;">${escapeHtml(JENIS_DANA[state.jenisDanaAktif || getDefaultJenisDana()].label)} — ${escapeHtml(TAHAP_PERIODE[state.tahapAktif || getDefaultTahap()].label)}</div>
       <div style="text-align:center; font-size:12px; margin-bottom:14px;">${escapeHtml(s.namaSekolah||'')} — Tahun Anggaran ${escapeHtml(s.tahunAnggaran||'-')}</div>
 
       <table style="width:100%; border-collapse:collapse; font-size:12px;">
@@ -7111,6 +7596,7 @@ function buildKaferLaporanDocument(kaferHeader){
   const kepsek = s.kepsek || {};
   const root = document.getElementById('print-root');
   const tahapInfo = TAHAP_PERIODE[kaferHeader.tahap] || TAHAP_PERIODE['1'];
+  const jenisDanaInfo = JENIS_DANA[kaferHeader.jenisDana] || JENIS_DANA['reguler'];
   const alamatBaris = [kaferHeader.kecamatan, kaferHeader.kabupaten, kaferHeader.provinsi].filter(Boolean).join(', ');
 
   const bodyHtml = `
@@ -7122,7 +7608,8 @@ function buildKaferLaporanDocument(kaferHeader){
 
       <div style="font-family:Lora,serif; font-size:22px; font-weight:700; letter-spacing:1px; max-width:520px; line-height:1.4; color:#16324F;">${escapeHtml(kaferHeader.judul||'LAPORAN PERTANGGUNGJAWABAN (LPJ) PENGGUNAAN DANA BOSP')}</div>
 
-      <div style="font-size:16px; font-weight:700; margin-top:22px; color:#C8963E; letter-spacing:1px;">${escapeHtml(tahapInfo.label.toUpperCase())}</div>
+      <div style="font-size:15px; font-weight:700; margin-top:18px; color:#16324F; letter-spacing:1px;">${escapeHtml(jenisDanaInfo.label.toUpperCase())}</div>
+      <div style="font-size:16px; font-weight:700; margin-top:6px; color:#C8963E; letter-spacing:1px;">${escapeHtml(tahapInfo.label.toUpperCase())}</div>
       <div style="font-size:14px; margin-top:4px;">TAHUN ANGGARAN ${escapeHtml(kaferHeader.tahun||'-')}</div>
 
       <div style="flex:1;"></div>
