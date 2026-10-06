@@ -123,6 +123,11 @@
     #print-root, #print-root *{ visibility:visible; }
     #print-root{ display:block !important; position:absolute; inset:0; margin:0; padding:0; }
     .no-print{ display:none !important; }
+    /* Judul kolom tabel otomatis diulang di setiap halaman lanjutan; baris tidak
+       terpotong di pergantian halaman; baris TOTAL (tfoot) hanya muncul di akhir. */
+    #print-root thead{ display:table-header-group; }
+    #print-root tfoot{ display:table-row-group; }
+    #print-root tr{ page-break-inside:avoid; break-inside:avoid; }
   }
 </style>
 </head>
@@ -793,6 +798,52 @@
           </div>
         </section>
 
+        <!-- DATA PEGAWAI: master nama/NIP/jabatan, dipakai sebagai checklist di Cetak Lampiran -->
+        <section id="page-pegawai" class="page hidden space-y-4">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="bg-white rounded-lg border border-navy-100 p-6 lg:col-span-1 self-start">
+              <h3 id="pg-form-title" class="font-serif font-semibold text-navy mb-1">Tambah Pegawai</h3>
+              <p class="text-xs text-navy-400 mb-4">Data ini muncul sebagai daftar centang saat mengisi Penerima Lampiran pada form transaksi.</p>
+              <form id="form-pegawai" class="space-y-3">
+                <input type="hidden" id="pg-id">
+                <div><label class="block text-xs font-semibold text-navy-400 mb-1">Nama Lengkap</label>
+                  <input required id="pg-nama" class="w-full rounded border border-navy-100 px-3 py-2 text-sm"></div>
+                <div><label class="block text-xs font-semibold text-navy-400 mb-1">NIP / NUPTK (boleh kosong)</label>
+                  <input id="pg-nip" class="w-full rounded border border-navy-100 px-3 py-2 text-sm font-mono"></div>
+                <div><label class="block text-xs font-semibold text-navy-400 mb-1">Jabatan</label>
+                  <input id="pg-jabatan" class="w-full rounded border border-navy-100 px-3 py-2 text-sm" placeholder="Guru / Kepala Sekolah / Operator / Penjaga Sekolah"></div>
+                <div><label class="block text-xs font-semibold text-navy-400 mb-1">Tugas / Kelas / Mapel</label>
+                  <input id="pg-tugas" class="w-full rounded border border-navy-100 px-3 py-2 text-sm" placeholder="Guru Kelas VI / Guru PAI / Operator Sekolah">
+                  <p class="text-[10px] text-navy-300 mt-1">Terisi otomatis di kolom Tugas pada SK Guru. Tetap bisa diubah per dokumen.</p></div>
+                <div class="flex gap-2 pt-1">
+                  <button type="submit" class="flex-1 bg-navy hover:bg-navy-600 text-white text-sm font-semibold rounded py-2.5">Simpan</button>
+                  <button type="button" id="btn-batal-pegawai" class="hidden px-4 text-sm font-semibold text-navy-400 hover:text-navy">Batal</button>
+                </div>
+              </form>
+              <details class="mt-5 border-t border-navy-100 pt-4">
+                <summary class="text-xs font-semibold text-navy cursor-pointer">Tempel banyak pegawai sekaligus</summary>
+                <p class="text-[11px] text-navy-400 mt-2 mb-2">Satu pegawai per baris, format: <span class="font-mono">Nama | NIP | Jabatan | Tugas</span> (pemisah bisa | , titik koma, atau tab — bisa langsung salin dari Excel).</p>
+                <textarea id="pg-bulk" rows="5" class="w-full rounded border border-navy-100 px-3 py-2 text-xs font-mono" placeholder="Budi Santoso, S.Pd | 198001012005011001 | Guru | Guru Kelas VI"></textarea>
+                <button type="button" id="btn-pegawai-bulk" class="mt-2 bg-white border border-navy-200 text-navy text-xs font-semibold rounded px-4 py-2">Tambahkan Semua</button>
+              </details>
+            </div>
+            <div class="bg-white rounded-lg border border-navy-100 p-6 lg:col-span-2">
+              <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <h3 class="font-serif font-semibold text-navy">Daftar Pegawai <span id="pg-count" class="text-xs font-normal text-navy-300"></span></h3>
+                <input id="pg-cari" placeholder="Cari nama / NIP..." class="rounded border border-navy-100 px-3 py-1.5 text-xs w-52">
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead><tr class="text-left text-xs text-navy-300 uppercase border-b border-navy-100">
+                    <th class="py-2 px-2 w-8">No</th><th class="py-2 px-2">Nama</th><th class="py-2 px-2">NIP</th><th class="py-2 px-2">Jabatan</th><th class="py-2 px-2">Tugas / Kelas / Mapel</th><th class="py-2 px-2">Aksi</th>
+                  </tr></thead>
+                  <tbody id="tbl-pegawai"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- BUKU KAS UMUM -->
         <section id="page-bku" class="page hidden space-y-4">
           <!-- TAHAP LAPORAN: pemisah periode Tahap 1 (Jan–Jun) & Tahap 2 (Jul–Des) agar data BKU tidak tercampur.
@@ -1189,6 +1240,18 @@
                 <p class="text-xs font-semibold text-navy-400 uppercase tracking-wide">Daftar Guru &amp; Tugas</p>
                 <button type="button" id="btn-tambah-skguru" class="text-xs font-semibold text-navy hover:underline whitespace-nowrap">+ Tambah Guru</button>
               </div>
+              <div class="no-print">
+                <button type="button" id="sg-peg-btn" class="text-xs font-semibold text-gold-600 hover:underline">&#9745; Pilih dari Data Pegawai</button>
+              </div>
+              <div id="sg-peg-panel" class="hidden border border-navy-100 rounded bg-paper/60 p-2.5 space-y-2 no-print">
+                <input id="sg-peg-cari" placeholder="Cari nama..." class="w-full rounded border border-navy-100 px-2 py-1.5 text-xs bg-white">
+                <label class="flex items-center gap-2 text-[11px] font-semibold text-navy-400"><input type="checkbox" id="sg-peg-semua" class="rounded border-navy-200"> Pilih semua yang tampil</label>
+                <div id="sg-peg-list" class="max-h-48 overflow-y-auto divide-y divide-navy-100 border border-navy-100 rounded bg-white"></div>
+                <div class="flex gap-2">
+                  <button type="button" id="sg-peg-ok" class="bg-navy hover:bg-navy-600 text-white text-xs font-semibold rounded px-4 py-1.5">Masukkan ke Daftar</button>
+                  <button type="button" id="sg-peg-tutup" class="text-xs font-semibold text-navy-400 hover:text-navy px-2">Tutup</button>
+                </div>
+              </div>
               <div class="grid grid-cols-12 gap-1.5 text-[10px] font-semibold text-navy-300 uppercase px-0.5">
                 <span class="col-span-3">Nama</span><span class="col-span-3">NIP</span><span class="col-span-2">Jabatan</span><span class="col-span-3">Tugas / Kelas / Mapel</span><span class="col-span-1"></span>
               </div>
@@ -1217,6 +1280,18 @@
               <div class="flex items-center justify-between gap-2">
                 <p class="text-xs font-semibold text-navy-400 uppercase tracking-wide">Daftar Peserta</p>
                 <button type="button" id="btn-tambah-hadir" class="text-xs font-semibold text-navy hover:underline whitespace-nowrap">+ Tambah Peserta</button>
+              </div>
+              <div class="no-print">
+                <button type="button" id="hd-peg-btn" class="text-xs font-semibold text-gold-600 hover:underline">&#9745; Pilih dari Data Pegawai</button>
+              </div>
+              <div id="hd-peg-panel" class="hidden border border-navy-100 rounded bg-paper/60 p-2.5 space-y-2 no-print">
+                <input id="hd-peg-cari" placeholder="Cari nama..." class="w-full rounded border border-navy-100 px-2 py-1.5 text-xs bg-white">
+                <label class="flex items-center gap-2 text-[11px] font-semibold text-navy-400"><input type="checkbox" id="hd-peg-semua" class="rounded border-navy-200"> Pilih semua yang tampil</label>
+                <div id="hd-peg-list" class="max-h-48 overflow-y-auto divide-y divide-navy-100 border border-navy-100 rounded bg-white"></div>
+                <div class="flex gap-2">
+                  <button type="button" id="hd-peg-ok" class="bg-navy hover:bg-navy-600 text-white text-xs font-semibold rounded px-4 py-1.5">Masukkan ke Daftar</button>
+                  <button type="button" id="hd-peg-tutup" class="text-xs font-semibold text-navy-400 hover:text-navy px-2">Tutup</button>
+                </div>
               </div>
               <div class="grid grid-cols-12 gap-1.5 text-[10px] font-semibold text-navy-300 uppercase px-0.5">
                 <span class="col-span-5">Nama</span><span class="col-span-6">Jabatan / Instansi</span><span class="col-span-1"></span>
@@ -1556,7 +1631,20 @@
       <div id="tx-lampiran-wrap" class="hidden border border-navy-100 rounded p-3 bg-paper/60 space-y-2">
         <div class="flex items-center justify-between gap-2">
           <p class="text-xs font-semibold text-navy-400">Daftar Penerima Lampiran</p>
-          <button type="button" id="btn-tambah-penerima-lampiran" class="text-xs font-semibold text-navy hover:underline whitespace-nowrap">+ Tambah Penerima</button>
+          <div class="flex items-center gap-3">
+            <button type="button" id="btn-pilih-pegawai" class="text-xs font-semibold text-gold-600 hover:underline whitespace-nowrap">&#9745; Pilih dari Data Pegawai</button>
+            <button type="button" id="btn-tambah-penerima-lampiran" class="text-xs font-semibold text-navy hover:underline whitespace-nowrap">+ Tambah Manual</button>
+          </div>
+        </div>
+        <div id="lp-pegawai-panel" class="hidden border border-navy-100 rounded bg-white p-2.5 space-y-2">
+          <input id="lp-pegawai-cari" placeholder="Cari nama..." class="w-full rounded border border-navy-100 px-2 py-1.5 text-xs">
+          <label class="flex items-center gap-2 text-[11px] font-semibold text-navy-400"><input type="checkbox" id="lp-pegawai-semua" class="rounded border-navy-200"> Pilih semua yang tampil</label>
+          <div id="lp-pegawai-list" class="max-h-48 overflow-y-auto divide-y divide-navy-100 border border-navy-100 rounded"></div>
+          <label class="flex items-center gap-2 text-[11px] text-navy-400"><input type="checkbox" id="lp-bagi-rata" class="rounded border-navy-200" checked> Bagi rata Jumlah (Rp) transaksi ke semua penerima</label>
+          <div class="flex gap-2">
+            <button type="button" id="btn-lp-pegawai-ok" class="bg-navy hover:bg-navy-600 text-white text-xs font-semibold rounded px-4 py-1.5">Masukkan ke Daftar</button>
+            <button type="button" id="btn-lp-pegawai-tutup" class="text-xs font-semibold text-navy-400 hover:text-navy px-2">Tutup</button>
+          </div>
         </div>
         <div class="grid grid-cols-12 gap-1.5 text-[10px] font-semibold text-navy-300 uppercase px-0.5">
           <span class="col-span-4">Nama</span><span class="col-span-3">NIP</span><span class="col-span-2">Jabatan</span><span class="col-span-2">Jumlah</span><span class="col-span-1"></span>
@@ -2030,7 +2118,7 @@ function confirmFix(pesan){
    lama yang dipakai sekolah-sekolah, cukup naikkan nilai minVersion di
    Firebase Console — tidak perlu menyentuh file di laptop sekolah.
    ========================================================================= */
-const APP_VERSION = "2.1.1"; // naikkan setiap kali merilis versi baru
+const APP_VERSION = "2.1.2"; // naikkan setiap kali merilis versi baru
 
 function compareVersion(a, b){
   const pa = String(a).split('.').map(Number);
@@ -2234,6 +2322,7 @@ const NAV = {
     { id:'dashboard-sekolah', label:'Dashboard', title:'Dashboard Sekolah' },
     { id:'profil', label:'Profil Sekolah', title:'Profil Sekolah' },
     { id:'pejabat', label:'Kepsek & Bendahara', title:'Data Kepala Sekolah & Bendahara' },
+    { id:'pegawai', label:'Data Pegawai', title:'Data Pegawai (Guru & Tenaga Kependidikan)' },
     { id:'bku', label:'Buku Kas Umum', title:'Buku Kas Umum (BKU)' },
     { id:'buku-pembantu', label:'Buku Pembantu', title:'Buku Pembantu (Opsional Penunjang SPJ)' },
     { id:'cetak', label:'Cetak Dokumen', title:'Cetak Kwitansi / Nota / BAST / SPJ Lengkap' },
@@ -2660,6 +2749,7 @@ function navigateTo(pageId){
   if(pageId === 'kk221') renderKk221Table();
   if(pageId === 'profil') fillProfilForm();
   if(pageId === 'pejabat') fillPejabatForm();
+  if(pageId === 'pegawai') renderPegawai();
   if(pageId === 'manajemen-sekolah') renderManajemenSekolah();
   if(pageId === 'monitoring') renderMonitoringLaporan();
   if(pageId === 'rekapitulasi') renderRekapitulasi();
@@ -3363,6 +3453,9 @@ function attachSchoolListeners(npsn){
     if(state.currentView==='dashboard-sekolah') renderDashboardSekolah();
     if(state.currentView==='profil') fillProfilForm();
     if(state.currentView==='pejabat') fillPejabatForm();
+    if(state.currentView==='pegawai') renderPegawai();
+    if(!document.getElementById('lp-pegawai-panel').classList.contains('hidden')) renderPilihPegawaiList();
+    refreshPanelPegawaiCetak();
     if(state.currentView==='bku') renderBKU();
     if(state.currentView==='backup') renderBackupInfo();
     if(state.currentView==='buku-pembantu') renderBukuPembantu();
@@ -4561,12 +4654,196 @@ document.getElementById('tx-lampiran').addEventListener('change', (e)=>{
 });
 document.getElementById('tx-jumlah').addEventListener('input', updateLampiranTotal);
 
+/* =========================================================================
+   DATA PEGAWAI — master nama/NIP/jabatan per sekolah. Disimpan di
+   sekolah/{npsn}/pegawai (ikut tersinkron lewat listener schoolRef dan
+   otomatis tercakup aturan akses data sekolah yang sudah ada). Dipakai sebagai
+   daftar centang pada "Daftar Penerima Lampiran" di form transaksi.
+   ========================================================================= */
+function getPegawaiList(){
+  const raw = (state.schoolData && state.schoolData.pegawai) || {};
+  return Object.entries(raw)
+    .map(([id,p])=>({id, ...p}))
+    .sort((a,b)=> (a.nama||'').localeCompare(b.nama||'', 'id', {sensitivity:'base'}));
+}
+function resetFormPegawai(){
+  document.getElementById('form-pegawai').reset();
+  document.getElementById('pg-id').value = '';
+  document.getElementById('pg-form-title').textContent = 'Tambah Pegawai';
+  document.getElementById('btn-batal-pegawai').classList.add('hidden');
+}
+function renderPegawai(){
+  const tbody = document.getElementById('tbl-pegawai');
+  if(!tbody) return;
+  const semua = getPegawaiList();
+  const q = (document.getElementById('pg-cari').value||'').trim().toLowerCase();
+  const list = q ? semua.filter(p=>(p.nama||'').toLowerCase().includes(q) || (p.nip||'').toLowerCase().includes(q)) : semua;
+  document.getElementById('pg-count').textContent = semua.length ? `(${semua.length} orang)` : '';
+  if(!list.length){
+    tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-xs text-navy-300">${semua.length ? 'Tidak ada pegawai yang cocok.' : 'Belum ada data pegawai. Tambahkan lewat form di samping.'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map((p,i)=>`
+    <tr class="border-b border-navy-50 hover:bg-paper/60">
+      <td class="py-2 px-2 text-navy-300">${i+1}</td>
+      <td class="py-2 px-2 font-semibold text-navy">${escapeHtml(p.nama)}</td>
+      <td class="py-2 px-2 font-mono text-xs">${escapeHtml(p.nip||'-')}</td>
+      <td class="py-2 px-2 text-xs">${escapeHtml(p.jabatan||'-')}</td>
+      <td class="py-2 px-2 text-xs">${escapeHtml(p.tugas||'-')}</td>
+      <td class="py-2 px-2 whitespace-nowrap">
+        <button type="button" class="btn-edit-pg text-xs font-semibold text-navy hover:underline mr-3" data-id="${p.id}">Ubah</button>
+        <button type="button" class="btn-hapus-pg text-xs font-semibold text-rust hover:underline" data-id="${p.id}">Hapus</button>
+      </td>
+    </tr>`).join('');
+  tbody.querySelectorAll('.btn-edit-pg').forEach(b=>b.addEventListener('click', ()=>{
+    const p = getPegawaiList().find(x=>x.id===b.dataset.id);
+    if(!p) return;
+    document.getElementById('pg-id').value = p.id;
+    document.getElementById('pg-nama').value = p.nama||'';
+    document.getElementById('pg-nip').value = p.nip||'';
+    document.getElementById('pg-jabatan').value = p.jabatan||'';
+    document.getElementById('pg-tugas').value = p.tugas||'';
+    document.getElementById('pg-form-title').textContent = 'Ubah Pegawai';
+    document.getElementById('btn-batal-pegawai').classList.remove('hidden');
+    document.getElementById('pg-nama').focus();
+  }));
+  tbody.querySelectorAll('.btn-hapus-pg').forEach(b=>b.addEventListener('click', async ()=>{
+    const p = getPegawaiList().find(x=>x.id===b.dataset.id);
+    if(!p) return;
+    if(!confirmFix(`Hapus ${p.nama} dari Data Pegawai?\n\n(Transaksi lama yang sudah memakai nama ini tidak ikut berubah.)`)) return;
+    try{
+      await db.ref('sekolah/'+state.userData.npsn+'/pegawai/'+p.id).remove();
+      logAudit('Data Pegawai', 'hapus', `Hapus pegawai ${p.nama}`);
+      if(document.getElementById('pg-id').value === p.id) resetFormPegawai();
+    }catch(err){
+      alertFix('Gagal menghapus pegawai: ' + (err.message || 'Periksa koneksi internet Anda dan coba lagi.'));
+    }
+  }));
+}
+document.getElementById('pg-cari').addEventListener('input', renderPegawai);
+document.getElementById('btn-batal-pegawai').addEventListener('click', resetFormPegawai);
+document.getElementById('form-pegawai').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const npsn = state.userData.npsn;
+  const id = document.getElementById('pg-id').value;
+  const payload = {
+    nama: document.getElementById('pg-nama').value.trim(),
+    nip: document.getElementById('pg-nip').value.trim(),
+    jabatan: document.getElementById('pg-jabatan').value.trim(),
+    tugas: document.getElementById('pg-tugas').value.trim(),
+    updatedAt: Date.now()
+  };
+  if(!payload.nama){ alertFix('Nama pegawai wajib diisi.'); return; }
+  try{
+    if(id){
+      await db.ref('sekolah/'+npsn+'/pegawai/'+id).update(payload);
+      logAudit('Data Pegawai', 'ubah', `Ubah pegawai ${payload.nama}`);
+    } else {
+      payload.createdAt = Date.now();
+      await db.ref('sekolah/'+npsn+'/pegawai').push(payload);
+      logAudit('Data Pegawai', 'tambah', `Tambah pegawai ${payload.nama}`);
+    }
+    resetFormPegawai();
+  }catch(err){
+    alertFix('Gagal menyimpan pegawai: ' + (err.message || 'Periksa koneksi internet Anda dan coba lagi.'));
+  }
+});
+document.getElementById('btn-pegawai-bulk').addEventListener('click', async ()=>{
+  const baris = document.getElementById('pg-bulk').value.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  const data = baris.map(l=>{
+    const k = l.split(/\t|\||;/).map(x=>x.trim());
+    return { nama:k[0]||'', nip:(k[1]||'').replace(/\s+/g,''), jabatan:k[2]||'', tugas:k[3]||'' };
+  }).filter(r=>r.nama);
+  if(!data.length){ alertFix('Tidak ada baris yang bisa dibaca. Format: Nama | NIP | Jabatan | Tugas'); return; }
+  const sudah = new Set(getPegawaiList().map(p=>(p.nama||'').toLowerCase()+'|'+(p.nip||'')));
+  const baru = data.filter(r=>!sudah.has(r.nama.toLowerCase()+'|'+r.nip));
+  if(!baru.length){ alertFix('Semua nama pada daftar tersebut sudah ada di Data Pegawai.'); return; }
+  const npsn = state.userData.npsn;
+  const updates = {};
+  baru.forEach(r=>{
+    const key = db.ref('sekolah/'+npsn+'/pegawai').push().key;
+    updates[key] = { ...r, createdAt: Date.now(), updatedAt: Date.now() };
+  });
+  try{
+    await db.ref('sekolah/'+npsn+'/pegawai').update(updates);
+    logAudit('Data Pegawai', 'tambah', `Tambah ${baru.length} pegawai sekaligus`);
+    document.getElementById('pg-bulk').value = '';
+    alertFix(`${baru.length} pegawai ditambahkan` + (data.length>baru.length ? ` (${data.length-baru.length} dilewati karena sudah ada).` : '.'));
+  }catch(err){
+    alertFix('Gagal menambahkan pegawai: ' + (err.message || 'Periksa koneksi internet Anda dan coba lagi.'));
+  }
+});
+
+/* ---- Checklist pegawai di form transaksi (Daftar Penerima Lampiran) ---- */
+const lpTerpilih = new Set(); // id pegawai yang dicentang pada panel
+function renderPilihPegawaiList(){
+  const wrap = document.getElementById('lp-pegawai-list');
+  const semua = getPegawaiList();
+  if(!semua.length){
+    wrap.innerHTML = `<p class="p-3 text-[11px] text-navy-300">Belum ada Data Pegawai. Isi dulu lewat menu <b>Data Pegawai</b>, atau gunakan "+ Tambah Manual".</p>`;
+    return;
+  }
+  const q = (document.getElementById('lp-pegawai-cari').value||'').trim().toLowerCase();
+  const sudahAda = new Set(Array.from(document.querySelectorAll('#tx-lampiran-rows .lampiran-row')).map(r=>
+    r.querySelector('.lp-nama').value.trim().toLowerCase()+'|'+r.querySelector('.lp-nip').value.trim()));
+  const tampil = q ? semua.filter(p=>(p.nama||'').toLowerCase().includes(q)) : semua;
+  wrap.innerHTML = tampil.map(p=>{
+    const ada = sudahAda.has((p.nama||'').toLowerCase()+'|'+(p.nip||''));
+    return `<label class="flex items-start gap-2 px-2.5 py-1.5 text-xs ${ada?'opacity-50':'hover:bg-paper/60 cursor-pointer'}">
+      <input type="checkbox" class="lp-pg-cb mt-0.5 rounded border-navy-200" data-id="${p.id}" ${ada?'disabled':''} ${lpTerpilih.has(p.id)&&!ada?'checked':''}>
+      <span><span class="font-semibold text-navy">${escapeHtml(p.nama)}</span>
+      <span class="block text-[10px] text-navy-300">${escapeHtml(p.jabatan||'-')}${p.nip?' · '+escapeHtml(p.nip):''}${ada?' · sudah di daftar':''}</span></span>
+    </label>`;
+  }).join('') || `<p class="p-3 text-[11px] text-navy-300">Tidak ada nama yang cocok.</p>`;
+  wrap.querySelectorAll('.lp-pg-cb').forEach(cb=>cb.addEventListener('change', ()=>{
+    if(cb.checked) lpTerpilih.add(cb.dataset.id); else lpTerpilih.delete(cb.dataset.id);
+  }));
+}
+document.getElementById('btn-pilih-pegawai').addEventListener('click', ()=>{
+  const panel = document.getElementById('lp-pegawai-panel');
+  panel.classList.toggle('hidden');
+  if(!panel.classList.contains('hidden')){
+    lpTerpilih.clear();
+    document.getElementById('lp-pegawai-cari').value = '';
+    document.getElementById('lp-pegawai-semua').checked = false;
+    renderPilihPegawaiList();
+  }
+});
+document.getElementById('btn-lp-pegawai-tutup').addEventListener('click', ()=>{
+  document.getElementById('lp-pegawai-panel').classList.add('hidden');
+});
+document.getElementById('lp-pegawai-cari').addEventListener('input', renderPilihPegawaiList);
+document.getElementById('lp-pegawai-semua').addEventListener('change', (e)=>{
+  document.querySelectorAll('#lp-pegawai-list .lp-pg-cb:not(:disabled)').forEach(cb=>{
+    cb.checked = e.target.checked;
+    if(cb.checked) lpTerpilih.add(cb.dataset.id); else lpTerpilih.delete(cb.dataset.id);
+  });
+});
+document.getElementById('btn-lp-pegawai-ok').addEventListener('click', ()=>{
+  const pilih = getPegawaiList().filter(p=>lpTerpilih.has(p.id));
+  if(!pilih.length){ alertFix('Centang minimal satu nama pegawai.'); return; }
+  pilih.forEach(p=>addLampiranRow({ nama:p.nama, nip:p.nip, jabatan:p.jabatan }));
+  if(document.getElementById('lp-bagi-rata').checked){
+    const total = Number(document.getElementById('tx-jumlah').value)||0;
+    const rows = Array.from(document.querySelectorAll('#tx-lampiran-rows .lampiran-row'));
+    if(total && rows.length){
+      const dasar = Math.floor(total/rows.length);
+      const sisa = total - dasar*rows.length; // sisa pembulatan masuk ke baris terakhir agar total tepat
+      rows.forEach((r,i)=>{ r.querySelector('.lp-jumlah').value = dasar + (i===rows.length-1 ? sisa : 0); });
+      updateLampiranTotal();
+    }
+  }
+  lpTerpilih.clear();
+  document.getElementById('lp-pegawai-panel').classList.add('hidden');
+});
+
 function openTransaksiModal(id){
   const modal = document.getElementById('modal-transaksi');
   const form = document.getElementById('form-transaksi');
   form.reset();
   clearLampiranRows();
   document.getElementById('tx-lampiran-wrap').classList.add('hidden');
+  document.getElementById('lp-pegawai-panel').classList.add('hidden');
   document.getElementById('tx-id').value = id || '';
 
   const tahap = state.tahapAktif || getDefaultTahap();
@@ -6946,6 +7223,79 @@ document.getElementById('btn-cetak-hadir-print').addEventListener('click', ()=>{
 });
 
 /* =========================================================================
+   CHECKLIST DATA PEGAWAI untuk SK Guru & Daftar Hadir (memakai master
+   Data Pegawai yang sama dengan Cetak Lampiran). Satu fungsi dipakai untuk
+   kedua panel; hanya beda selector baris & fungsi penambah baris.
+   ========================================================================= */
+const _panelPegawaiCetak = [];
+function refreshPanelPegawaiCetak(){
+  _panelPegawaiCetak.forEach(fn=>fn());
+}
+function setupPilihPegawaiCetak(cfg){
+  const el = (k)=>document.getElementById(cfg.prefix+'-peg-'+k);
+  const terpilih = new Set();
+  function namaSudahAda(){
+    return new Set(Array.from(document.querySelectorAll(cfg.rowsSel))
+      .map(r=>r.querySelector(cfg.namaSel).value.trim().toLowerCase()).filter(Boolean));
+  }
+  function render(){
+    if(el('panel').classList.contains('hidden')) return;
+    const wrap = el('list');
+    const semua = getPegawaiList();
+    if(!semua.length){
+      wrap.innerHTML = `<p class="p-3 text-[11px] text-navy-300">Belum ada Data Pegawai. Isi dulu lewat menu <b>Data Pegawai</b>, atau ketik manual pada baris di bawah.</p>`;
+      return;
+    }
+    const q = (el('cari').value||'').trim().toLowerCase();
+    const ada = namaSudahAda();
+    const tampil = q ? semua.filter(p=>(p.nama||'').toLowerCase().includes(q)) : semua;
+    wrap.innerHTML = tampil.map(p=>{
+      const sudah = ada.has((p.nama||'').toLowerCase());
+      return `<label class="flex items-start gap-2 px-2.5 py-1.5 text-xs ${sudah?'opacity-50':'hover:bg-paper/60 cursor-pointer'}">
+        <input type="checkbox" class="pg-cb mt-0.5 rounded border-navy-200" data-id="${p.id}" ${sudah?'disabled':''} ${terpilih.has(p.id)&&!sudah?'checked':''}>
+        <span><span class="font-semibold text-navy">${escapeHtml(p.nama)}</span>
+        <span class="block text-[10px] text-navy-300">${escapeHtml(p.jabatan||'-')}${p.tugas?' · '+escapeHtml(p.tugas):''}${p.nip?' · '+escapeHtml(p.nip):''}${sudah?' · sudah di daftar':''}</span></span>
+      </label>`;
+    }).join('') || `<p class="p-3 text-[11px] text-navy-300">Tidak ada nama yang cocok.</p>`;
+    wrap.querySelectorAll('.pg-cb').forEach(cb=>cb.addEventListener('change', ()=>{
+      if(cb.checked) terpilih.add(cb.dataset.id); else terpilih.delete(cb.dataset.id);
+    }));
+  }
+  _panelPegawaiCetak.push(render);
+  el('btn').addEventListener('click', ()=>{
+    const panel = el('panel');
+    panel.classList.toggle('hidden');
+    if(!panel.classList.contains('hidden')){
+      terpilih.clear();
+      el('cari').value = '';
+      el('semua').checked = false;
+      render();
+    }
+  });
+  el('tutup').addEventListener('click', ()=>el('panel').classList.add('hidden'));
+  el('cari').addEventListener('input', render);
+  el('semua').addEventListener('change', (e)=>{
+    el('list').querySelectorAll('.pg-cb:not(:disabled)').forEach(cb=>{
+      cb.checked = e.target.checked;
+      if(cb.checked) terpilih.add(cb.dataset.id); else terpilih.delete(cb.dataset.id);
+    });
+  });
+  el('ok').addEventListener('click', ()=>{
+    const pilih = getPegawaiList().filter(p=>terpilih.has(p.id));
+    if(!pilih.length){ alertFix('Centang minimal satu nama pegawai.'); return; }
+    // buang baris kosong bawaan agar tidak menyisakan baris bolong di antara nama
+    document.querySelectorAll(cfg.rowsSel).forEach(r=>{
+      if(!r.querySelector(cfg.namaSel).value.trim()) r.remove();
+    });
+    pilih.forEach(p=>cfg.addRow({ nama:p.nama, nip:p.nip, jabatan:p.jabatan, tugas:p.tugas }));
+    terpilih.clear();
+    el('panel').classList.add('hidden');
+  });
+}
+setupPilihPegawaiCetak({ prefix:'sg', rowsSel:'#sk-guru-rows .skguru-row', namaSel:'.sg-nama', addRow:addSkGuruRow });
+setupPilihPegawaiCetak({ prefix:'hd', rowsSel:'#hadir-rows .hadir-row', namaSel:'.hd-nama', addRow:addHadirRow });
+
+/* =========================================================================
    CETAK: KAFER (SAMPUL) LAPORAN PERTAHAP
    ========================================================================= */
 function initKaferFields(){
@@ -7550,14 +7900,14 @@ function buildDaftarHadirDocument(hadirHeader, peserta){
   const kepsek = s.kepsek || {};
   const root = document.getElementById('print-root');
   const kopHtml = buildKopSuratHtml(s);
-  const box = 'border:1px solid #16324F; padding:20px; margin-bottom:16px; page-break-inside:avoid; font-family:Inter,sans-serif; font-size:13px; color:#23262B;';
+  const box = 'border:1px solid #16324F; padding:20px; margin-bottom:16px; font-family:Inter,sans-serif; font-size:13px; color:#23262B;';
 
   const rows = peserta.map((p,idx)=>`
-    <tr>
-      <td style="border:1px solid #16324F; padding:8px 6px; text-align:center;">${idx+1}</td>
-      <td style="border:1px solid #16324F; padding:8px 6px;">${escapeHtml(p.nama||'-')}</td>
-      <td style="border:1px solid #16324F; padding:8px 6px;">${escapeHtml(p.jabatan||'-')}</td>
-      <td style="border:1px solid #16324F; padding:8px 6px;"></td>
+    <tr style="page-break-inside:avoid;">
+      <td style="border:1px solid #16324F; padding:8px 6px; height:44px; vertical-align:middle; text-align:center;">${idx+1}</td>
+      <td style="border:1px solid #16324F; padding:8px 6px; height:44px; vertical-align:middle;">${escapeHtml(p.nama||'-')}</td>
+      <td style="border:1px solid #16324F; padding:8px 6px; height:44px; vertical-align:middle;">${escapeHtml(p.jabatan||'-')}</td>
+      <td style="border:1px solid #16324F; padding:8px 6px; height:44px; vertical-align:middle;"></td>
     </tr>`).join('');
 
   const bodyHtml = `
@@ -7579,7 +7929,7 @@ function buildDaftarHadirDocument(hadirHeader, peserta){
         <tbody>${rows}</tbody>
       </table>
 
-      <div style="text-align:center; margin-top:30px; font-size:13px;">
+      <div style="text-align:center; margin-top:30px; font-size:13px; page-break-inside:avoid;">
         ${escapeHtml(s.namaSekolah||'')}, ${formatTanggalPanjang(hadirHeader.tanggal)}<br>
         Mengetahui,<br>Kepala ${escapeHtml(s.namaSekolah||'')},
         <div style="height:80px;"></div>
@@ -7865,19 +8215,19 @@ function buildPrintDocument(docType, items, docHeader){
         no++;
         total += Number(p.jumlah)||0;
         rows += `
-        <tr>
-          <td style="border:1px solid #16324F; padding:5px 6px; text-align:center;">${no}</td>
-          <td style="border:1px solid #16324F; padding:5px 6px;">${escapeHtml(p.nama||'-')}</td>
-          <td style="border:1px solid #16324F; padding:5px 6px; text-align:center;">${escapeHtml(p.nip||'-')}</td>
-          <td style="border:1px solid #16324F; padding:5px 6px;">${escapeHtml(p.jabatan||'-')}</td>
-          <td style="border:1px solid #16324F; padding:5px 6px; text-align:right;">${fmtRupiah(p.jumlah)}</td>
-          <td style="border:1px solid #16324F; padding:5px 6px;"></td>
+        <tr style="page-break-inside:avoid;">
+          <td style="border:1px solid #16324F; padding:5px 6px; height:40px; vertical-align:middle; text-align:center;">${no}</td>
+          <td style="border:1px solid #16324F; padding:5px 6px; height:40px; vertical-align:middle;">${escapeHtml(p.nama||'-')}</td>
+          <td style="border:1px solid #16324F; padding:5px 6px; height:40px; vertical-align:middle; text-align:center;">${escapeHtml(p.nip||'-')}</td>
+          <td style="border:1px solid #16324F; padding:5px 6px; height:40px; vertical-align:middle;">${escapeHtml(p.jabatan||'-')}</td>
+          <td style="border:1px solid #16324F; padding:5px 6px; height:40px; vertical-align:middle; text-align:right;">${fmtRupiah(p.jumlah)}</td>
+          <td style="border:1px solid #16324F; padding:5px 6px; height:40px; vertical-align:middle;"></td>
         </tr>`;
       });
     });
 
     bodyHtml = `
-      <div style="${box}">
+      <div style="${box.replace('page-break-inside:avoid;','')}">
         <div style="text-align:center; font-family:Lora,serif; font-weight:700; font-size:15px; letter-spacing:1px;">DAFTAR LAMPIRAN</div>
         <div style="margin-bottom:10px;"></div>
         <table style="width:100%; border-collapse:collapse; font-size:12px;">
@@ -7897,6 +8247,7 @@ function buildPrintDocument(docType, items, docHeader){
           </tr></tfoot>
         </table>
 
+        <div style="page-break-inside:avoid;">
         <table style="width:100%; margin-top:30px; font-size:13px;"><tr>
           <td style="width:45%; text-align:center;">Bendahara,</td>
           <td style="width:10%;"></td>
@@ -7907,6 +8258,7 @@ function buildPrintDocument(docType, items, docHeader){
           <td style="width:10%;"></td>
           <td style="width:45%; text-align:center; padding-top:6px;"><b>${escapeHtml(kepsek.nama||'( ..................... )')}</b><br>NIP. ${escapeHtml(kepsek.nip||'-')}</td>
         </tr></table>
+        </div>
       </div>`;
   }
 
