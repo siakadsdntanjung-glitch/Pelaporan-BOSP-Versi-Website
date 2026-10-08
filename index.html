@@ -1165,6 +1165,9 @@
             <button data-doc="hadir" class="cetak-tab px-4 py-2 text-sm font-semibold rounded bg-white border border-navy-200 text-navy">Daftar Hadir</button>
             <button data-doc="kafer" class="cetak-tab px-4 py-2 text-sm font-semibold rounded bg-white border border-navy-200 text-navy">Kafer Laporan</button>
             <button data-doc="sptjm" class="cetak-tab px-4 py-2 text-sm font-semibold rounded bg-white border border-navy-200 text-navy">SPTJM</button>
+            <button data-doc="skrkas" class="cetak-tab px-4 py-2 text-sm font-semibold rounded bg-white border border-navy-200 text-navy">SK Panitia RKAS</button>
+            <button data-doc="sktimbos" class="cetak-tab px-4 py-2 text-sm font-semibold rounded bg-white border border-navy-200 text-navy">SK Tim BOS</button>
+            <button data-doc="pengantar" class="cetak-tab px-4 py-2 text-sm font-semibold rounded bg-white border border-navy-200 text-navy">Surat Pengantar</button>
           </div>
 
           <!-- Penjelasan opsi "Gabungkan No. Bukti sama" (isi teks sama seperti sebelumnya,
@@ -1363,6 +1366,12 @@
             </div>
             <button id="btn-cetak-sptjm-print" class="no-print bg-gold-500 hover:bg-gold-600 text-white text-sm font-semibold rounded px-5 py-2.5">Cetak SPTJM</button>
           </div>
+
+          <!-- Panel SK Panitia Penyusunan RKAS, SK Tim Pengelola BOS & Surat Pengantar:
+               isi form dibuat oleh JavaScript (lihat setupDokumenTambahan) -->
+          <div id="cetak-panel-skrkas" class="hidden space-y-4"></div>
+          <div id="cetak-panel-sktimbos" class="hidden space-y-4"></div>
+          <div id="cetak-panel-pengantar" class="hidden space-y-4"></div>
         </section>
 
         <!-- KERTAS KERJA UNIT 2.2.1: BELANJA ATK / JASA / MODAL / HONOR / KEBERSIHAN / ALAT RUMAH TANGGA -->
@@ -2118,7 +2127,7 @@ function confirmFix(pesan){
    lama yang dipakai sekolah-sekolah, cukup naikkan nilai minVersion di
    Firebase Console — tidak perlu menyentuh file di laptop sekolah.
    ========================================================================= */
-const APP_VERSION = "2.1.2"; // naikkan setiap kali merilis versi baru
+const APP_VERSION = "2.1.3"; // naikkan setiap kali merilis versi baru
 
 function compareVersion(a, b){
   const pa = String(a).split('.').map(Number);
@@ -6931,6 +6940,9 @@ document.querySelectorAll('.cetak-tab').forEach(btn=>{
     document.getElementById('cetak-panel-hadir').classList.toggle('hidden', state.cetakDoc !== 'hadir');
     document.getElementById('cetak-panel-kafer').classList.toggle('hidden', state.cetakDoc !== 'kafer');
     document.getElementById('cetak-panel-sptjm').classList.toggle('hidden', state.cetakDoc !== 'sptjm');
+    document.getElementById('cetak-panel-skrkas').classList.toggle('hidden', state.cetakDoc !== 'skrkas');
+    document.getElementById('cetak-panel-sktimbos').classList.toggle('hidden', state.cetakDoc !== 'sktimbos');
+    document.getElementById('cetak-panel-pengantar').classList.toggle('hidden', state.cetakDoc !== 'pengantar');
 
     if(needsHeader && !document.getElementById('cetak-tanggal').value){
       document.getElementById('cetak-tanggal').value = todayStr();
@@ -6947,6 +6959,10 @@ document.querySelectorAll('.cetak-tab').forEach(btn=>{
       initKaferFields();
     } else if(state.cetakDoc === 'sptjm'){
       initSptjmFields();
+    } else if(state.cetakDoc === 'skrkas' || state.cetakDoc === 'sktimbos'){
+      initKeputusanFields(state.cetakDoc);
+    } else if(state.cetakDoc === 'pengantar'){
+      initPengantarFields();
     }
   });
 });
@@ -7284,9 +7300,11 @@ function setupPilihPegawaiCetak(cfg){
     const pilih = getPegawaiList().filter(p=>terpilih.has(p.id));
     if(!pilih.length){ alertFix('Centang minimal satu nama pegawai.'); return; }
     // buang baris kosong bawaan agar tidak menyisakan baris bolong di antara nama
-    document.querySelectorAll(cfg.rowsSel).forEach(r=>{
-      if(!r.querySelector(cfg.namaSel).value.trim()) r.remove();
-    });
+    if(!cfg.keepEmptyRows){
+      document.querySelectorAll(cfg.rowsSel).forEach(r=>{
+        if(!r.querySelector(cfg.namaSel).value.trim()) r.remove();
+      });
+    }
     pilih.forEach(p=>cfg.addRow({ nama:p.nama, nip:p.nip, jabatan:p.jabatan, tugas:p.tugas }));
     terpilih.clear();
     el('panel').classList.add('hidden');
@@ -8226,9 +8244,20 @@ function buildPrintDocument(docType, items, docHeader){
       });
     });
 
+    // Keterangan "LAMPIRAN KWITANSI BPU..." — memakai No. Bukti transaksi yang dicetak
+    // (mis. BPU48). Bila ada beberapa No. Bukti berbeda, semuanya ditulis dipisah koma.
+    // Bila tidak ada No. Bukti sama sekali, tetap tercetak "LAMPIRAN KWITANSI BPU".
+    const daftarNoBukti = [];
+    items.forEach(t=>{
+      const nb = String(t.noBukti||'').trim();
+      if(nb && !daftarNoBukti.includes(nb)) daftarNoBukti.push(nb);
+    });
+    const labelBpu = daftarNoBukti.length ? daftarNoBukti.join(', ') : 'BPU';
+
     bodyHtml = `
       <div style="${box.replace('page-break-inside:avoid;','')}">
         <div style="text-align:center; font-family:Lora,serif; font-weight:700; font-size:15px; letter-spacing:1px;">DAFTAR LAMPIRAN</div>
+        <div style="text-align:center; font-family:Lora,serif; font-weight:700; font-size:13px; letter-spacing:0.5px; margin-top:2px; text-transform:uppercase;">LAMPIRAN KWITANSI ${escapeHtml(labelBpu)}</div>
         <div style="margin-bottom:10px;"></div>
         <table style="width:100%; border-collapse:collapse; font-size:12px;">
           <thead><tr>
@@ -8264,6 +8293,504 @@ function buildPrintDocument(docType, items, docHeader){
 
   root.innerHTML = `<div style="padding:24px;">${kopHtml}${bodyHtml}</div>`;
 }
+
+/* =========================================================================
+   CETAK: SK PANITIA PENYUSUNAN RKAS, SK TIM PENGELOLA BOS & SURAT PENGANTAR BOS
+   Tiga dokumen tambahan pada menu Cetak Dokumen. Panel isiannya dibuat lewat
+   JavaScript (satu generator dipakai untuk dua SK karena susunannya sama),
+   sedangkan daftar pegawai memakai master Data Pegawai yang sama dengan
+   SK Guru & Daftar Hadir. Kata {sekolah} dan {tahun} pada kolom isi otomatis
+   diganti saat dicetak.
+   ========================================================================= */
+const ORDINAL_DIKTUM = ['Pertama','Kedua','Ketiga','Keempat','Kelima','Keenam','Ketujuh','Kedelapan','Kesembilan','Kesepuluh'];
+const KEPUTUSAN_MENGINGAT = [
+  'Undang-undang Negara No. 27 tahun 2003 tentang Keuangan Negara (Lembaran Negara RI No. 4286).',
+  'Undang-undang Negara RI No. 156 tahun 2004 tentang pemeriksaan pengelolaan dana tanggung jawab Negara.',
+  'Keputusan Menteri Keuangan Negara No. 331/M/V/9/1968 tentang Pedoman bagi Pegawai Negeri yang diberi tugas melakukan pemeriksaan umum kas para Bendahara pemegang kas.'
+];
+const KEPUTUSAN_MEMPERHATIKAN = [
+  'Petunjuk teknis penggunaan Bantuan Operasional Sekolah (BOS) Program Kompensasi pengurangan subsidi Bahan Bakar Minyak.',
+  'Peraturan Menteri Pendidikan dan Kebudayaan RI No. 161 tahun 2014 tentang Petunjuk teknis penggunaan dan pertanggungjawaban keuangan dana BOS tahun anggaran 2015.'
+];
+const KEPUTUSAN_CFG = {
+  skrkas: {
+    prefix: 'skrk',
+    judul: 'PANITIA PENYUSUNAN RENCANA KEGIATAN DAN ANGGARAN SEKOLAH (RKAS)',
+    lampiranTentang: 'PEMBENTUKAN PANITIA PENYUSUNAN RKAS',
+    strukturJudul: 'STRUKTUR PANITIA PENYUSUNAN RKAS',
+    panelJudul: 'Detail SK Panitia Penyusunan RKAS',
+    tombol: 'Cetak SK Panitia RKAS',
+    sosialisasi: 'Rapat penyusunan dan penetapan RKAS tingkat Sekolah {sekolah} bersama Guru-Guru, Komite, dan perwakilan orang tua tanggal {tanggal}',
+    menimbang: [
+      'Bahwa dalam rangka penyusunan Rencana Kegiatan dan Anggaran Sekolah (RKAS) yang transparan dan dapat dipertanggungjawabkan, maka perlu dibentuk panitia penyusunan RKAS tingkat Sekolah tahun {tahun}',
+      'Bahwa panitia penyusun yang dimaksud adalah Guru-guru, Komite dan Perwakilan orang tua siswa'
+    ],
+    mengingat: KEPUTUSAN_MENGINGAT,
+    memperhatikan: KEPUTUSAN_MEMPERHATIKAN,
+    diktum: [
+      'Pembentukan Panitia Penyusunan RKAS tingkat {sekolah}',
+      'Menunjuk dan menugaskan nama-nama yang tercantum pada lampiran keputusan ini menjalankan tugas sesuai kedudukan masing-masing dalam penyusunan RKAS tahun {tahun}.',
+      'Melakukan koordinasi dengan Kepala Sekolah tentang berbagai hal dalam pelaksanaan tugas masing-masing.',
+      'Apabila terdapat kekeliruan dalam keputusan ini akan diperbaiki sebagaimana mestinya.',
+      'Keputusan ini mulai berlaku sejak tanggal ditetapkan.'
+    ],
+    preset: [
+      { dinas:'Kepala Sekolah', tim:'Penanggung Jawab', src:'kepsek' },
+      { dinas:'Guru', tim:'Ketua' },
+      { dinas:'Guru', tim:'Sekretaris' },
+      { dinas:'Guru', tim:'Bendahara', src:'bendahara' },
+      { dinas:'Guru', tim:'Anggota' },
+      { dinas:'Ketua Komite', tim:'Anggota', src:'komite' },
+      { dinas:'Komite', tim:'Anggota' },
+      { dinas:'Orang Tua Murid', tim:'Anggota' }
+    ]
+  },
+  sktimbos: {
+    prefix: 'sktb',
+    judul: 'TIM PENGELOLA TINGKAT SEKOLAH PENGGUNAAN DANA BOS',
+    lampiranTentang: 'PEMBENTUKAN TIM PENGELOLAAN DANA BOS',
+    strukturJudul: 'STRUKTUR PENGELOLAAN DANA BOS',
+    panelJudul: 'Detail SK Tim Pengelola BOS',
+    tombol: 'Cetak SK Tim Pengelola BOS',
+    sosialisasi: 'Sosialisasi tingkat Sekolah {sekolah} tentang penggunaan dana BOS dan penetapan RKAT/RKAS bersama Guru-Guru, Komite, dan perwakilan orang tua tanggal {tanggal}',
+    menimbang: [
+      'Bahwa dalam rangka memperlancar pelaksanaan kegiatan serta transparansi penggunaan dana BOS, maka perlu dibentuk kepanitiaan tingkat Sekolah yang selanjutnya bertindak selaku pengelola tingkat Sekolah penggunaan dana BOS tahun {tahun}',
+      'Bahwa tim pengelola yang dimaksud adalah Guru-guru, Komite dan Perwakilan orang tua siswa'
+    ],
+    mengingat: KEPUTUSAN_MENGINGAT,
+    memperhatikan: KEPUTUSAN_MEMPERHATIKAN,
+    diktum: [
+      'Pembentukan Tim Pengelola dana BOS tingkat {sekolah}',
+      'Menunjuk dan menugaskan guru-guru {sekolah} menjalankan tugas sesuai kedudukan masing-masing.',
+      'Melakukan koordinasi dengan Kepala Sekolah tentang berbagai hal dalam pelaksanaan tugas masing-masing.',
+      'Apabila terdapat kekeliruan dalam keputusan ini akan diperbaiki sebagaimana mestinya.',
+      'Keputusan ini mulai berlaku sejak tanggal ditetapkan.'
+    ],
+    preset: [
+      { dinas:'Kepala Sekolah', tim:'Penanggung Jawab', src:'kepsek' },
+      { dinas:'Guru', tim:'Bendahara', src:'bendahara' },
+      { dinas:'Guru', tim:'Sekretaris' },
+      { dinas:'Ketua Komite', tim:'Ketua Komite', src:'komite' },
+      { dinas:'Komite', tim:'Anggota Komite' },
+      { dinas:'Komite', tim:'Anggota Komite' },
+      { dinas:'Orang Tua Murid', tim:'Anggota' },
+      { dinas:'Orang Tua Murid', tim:'Anggota' },
+      { dinas:'Orang Tua Murid', tim:'Anggota' }
+    ]
+  }
+};
+
+const _kpIn = 'w-full rounded border border-navy-100 px-3 py-2 text-sm';
+const _kpLb = 'block text-xs font-semibold text-navy-400 mb-1';
+
+function keputusanPanelHtml(key){
+  const c = KEPUTUSAN_CFG[key], p = c.prefix;
+  const ta = (id, label, rows, nilai) => `
+    <div><label class="${_kpLb}">${label}</label>
+      <textarea id="${p}-${id}" rows="${rows}" class="${_kpIn}">${escapeHtml(nilai.join('\n'))}</textarea></div>`;
+  return `
+    <div class="bg-white rounded-lg border border-navy-100 p-4 no-print space-y-3">
+      <p class="text-xs font-semibold text-navy-400 uppercase tracking-wide">${c.panelJudul}</p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div><label class="${_kpLb}">Nomor SK</label>
+          <input id="${p}-nomor" class="${_kpIn}" placeholder="420 / 09 / SDK-Jong / I / 2026"></div>
+        <div><label class="${_kpLb}">Tanggal Penetapan</label>
+          <input type="date" id="${p}-tanggal" class="${_kpIn}"></div>
+        <div><label class="${_kpLb}">Ditetapkan di</label>
+          <input id="${p}-tempat" class="${_kpIn}"></div>
+        <div><label class="${_kpLb}">Tahun Pelajaran</label>
+          <input id="${p}-tahun" class="${_kpIn}" placeholder="2026/2027"></div>
+        <div class="sm:col-span-2"><label class="${_kpLb}">Tanggal Sosialisasi / Rapat (boleh kosong)</label>
+          <input type="date" id="${p}-sosialisasi" class="${_kpIn}">
+          <p class="text-[10px] text-navy-300 mt-1">Bila diisi, otomatis menjadi butir terakhir pada bagian Memperhatikan.</p></div>
+        <div><label class="${_kpLb}">Nama Ketua Komite</label>
+          <input id="${p}-komite-nama" class="${_kpIn}"></div>
+        <div><label class="${_kpLb}">NIP Ketua Komite (boleh kosong)</label>
+          <input id="${p}-komite-nip" class="${_kpIn} font-mono"></div>
+      </div>
+      <details class="border-t border-navy-100 pt-3">
+        <summary class="text-xs font-semibold text-navy cursor-pointer">Isi keputusan (Menimbang, Mengingat, Memperhatikan, Diktum) — bisa diubah</summary>
+        <div class="space-y-3 mt-3">
+          <p class="text-[11px] text-navy-400">Satu butir per baris. Tulis <span class="font-mono">{sekolah}</span> dan <span class="font-mono">{tahun}</span> agar terisi otomatis dari Profil Sekolah dan kolom Tahun Pelajaran. Diktum diberi urutan Pertama, Kedua, dst. otomatis.</p>
+          ${ta('menimbang', 'Menimbang', 4, c.menimbang)}
+          ${ta('mengingat', 'Mengingat', 4, c.mengingat)}
+          ${ta('memperhatikan', 'Memperhatikan', 3, c.memperhatikan)}
+          ${ta('diktum', 'Memutuskan — Menetapkan', 6, c.diktum)}
+        </div>
+      </details>
+    </div>
+
+    <div class="bg-white rounded-lg border border-navy-100 p-4 no-print space-y-2">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <p class="text-xs font-semibold text-navy-400 uppercase tracking-wide">Susunan pada Lampiran</p>
+        <div class="flex items-center gap-3">
+          <button type="button" id="${p}-muat" class="text-xs font-semibold text-navy-400 hover:text-navy whitespace-nowrap">Muat Susunan Standar</button>
+          <button type="button" id="${p}-tambah" class="text-xs font-semibold text-navy hover:underline whitespace-nowrap">+ Tambah Baris</button>
+        </div>
+      </div>
+      <div class="no-print">
+        <button type="button" id="${p}-peg-btn" class="text-xs font-semibold text-gold-600 hover:underline">&#9745; Pilih dari Data Pegawai</button>
+      </div>
+      <div id="${p}-peg-panel" class="hidden border border-navy-100 rounded bg-paper/60 p-2.5 space-y-2 no-print">
+        <input id="${p}-peg-cari" placeholder="Cari nama..." class="w-full rounded border border-navy-100 px-2 py-1.5 text-xs bg-white">
+        <label class="flex items-center gap-2 text-[11px] font-semibold text-navy-400"><input type="checkbox" id="${p}-peg-semua" class="rounded border-navy-200"> Pilih semua yang tampil</label>
+        <div id="${p}-peg-list" class="max-h-48 overflow-y-auto divide-y divide-navy-100 border border-navy-100 rounded bg-white"></div>
+        <div class="flex gap-2">
+          <button type="button" id="${p}-peg-ok" class="bg-navy hover:bg-navy-600 text-white text-xs font-semibold rounded px-4 py-1.5">Masukkan ke Daftar</button>
+          <button type="button" id="${p}-peg-tutup" class="text-xs font-semibold text-navy-400 hover:text-navy px-2">Tutup</button>
+        </div>
+      </div>
+      <p class="text-[10px] text-navy-300">Nama yang dipilih mengisi baris kosong lebih dulu (jabatan dalam tim tetap), baru menambah baris baru. Baris tanpa nama tetap tercetak sebagai kolom kosong untuk diisi tangan.</p>
+      <div class="grid grid-cols-12 gap-1.5 text-[10px] font-semibold text-navy-300 uppercase px-0.5">
+        <span class="col-span-3">Nama</span><span class="col-span-2">NIP</span><span class="col-span-2">No. HP</span><span class="col-span-2">Jabatan Dinas</span><span class="col-span-2">Jabatan Tim</span><span class="col-span-1"></span>
+      </div>
+      <div id="${p}-rows" class="space-y-1.5"></div>
+      <datalist id="${p}-tim-opsi">
+        <option value="Penanggung Jawab"><option value="Ketua"><option value="Sekretaris"><option value="Bendahara">
+        <option value="Ketua Komite"><option value="Anggota Komite"><option value="Anggota">
+      </datalist>
+    </div>
+    <button id="${p}-print" class="no-print bg-gold-500 hover:bg-gold-600 text-white text-sm font-semibold rounded px-5 py-2.5">${c.tombol}</button>`;
+}
+
+function addTimRow(p, data){
+  data = data || {};
+  const wrap = document.getElementById(p+'-rows');
+  let row = null;
+  if(data._fill){
+    // isi baris kosong pertama (jabatan tim bawaan tetap terpakai)
+    row = Array.from(wrap.querySelectorAll('.tm-row')).find(r=>!r.querySelector('.tm-nama').value.trim()) || null;
+  }
+  if(row){
+    row.querySelector('.tm-nama').value = data.nama||'';
+    row.querySelector('.tm-nip').value = data.nip||'';
+    if(!row.querySelector('.tm-dinas').value.trim() && data.dinas) row.querySelector('.tm-dinas').value = data.dinas;
+    return;
+  }
+  row = document.createElement('div');
+  row.className = 'tm-row grid grid-cols-12 gap-1.5 items-center';
+  row.innerHTML = `
+    <input class="tm-nama col-span-3 rounded border border-navy-100 px-2 py-1.5 text-xs" placeholder="Nama">
+    <input class="tm-nip col-span-2 rounded border border-navy-100 px-2 py-1.5 text-xs font-mono" placeholder="NIP">
+    <input class="tm-hp col-span-2 rounded border border-navy-100 px-2 py-1.5 text-xs font-mono" placeholder="No. HP">
+    <input class="tm-dinas col-span-2 rounded border border-navy-100 px-2 py-1.5 text-xs" placeholder="Guru">
+    <input class="tm-tim col-span-2 rounded border border-navy-100 px-2 py-1.5 text-xs" list="${p}-tim-opsi" placeholder="Anggota">
+    <button type="button" class="btn-hapus-tm col-span-1 text-rust hover:text-rust-600 text-base font-bold leading-none" title="Hapus baris ini">&times;</button>
+  `;
+  wrap.appendChild(row);
+  row.querySelector('.tm-nama').value = data.nama||'';
+  row.querySelector('.tm-nip').value = data.nip||'';
+  row.querySelector('.tm-hp').value = data.hp||'';
+  row.querySelector('.tm-dinas').value = data.dinas||'';
+  row.querySelector('.tm-tim').value = data.tim||'';
+  row.querySelector('.btn-hapus-tm').addEventListener('click', ()=>{ row.remove(); });
+}
+function collectTimRows(p){
+  return Array.from(document.querySelectorAll(`#${p}-rows .tm-row`)).map(row=>({
+    nama: row.querySelector('.tm-nama').value.trim(),
+    nip: row.querySelector('.tm-nip').value.trim(),
+    hp: row.querySelector('.tm-hp').value.trim(),
+    dinas: row.querySelector('.tm-dinas').value.trim(),
+    tim: row.querySelector('.tm-tim').value.trim()
+  })).filter(r=>r.nama || r.dinas || r.tim);
+}
+function muatSusunanStandar(key){
+  const c = KEPUTUSAN_CFG[key], p = c.prefix;
+  const s = state.schoolData || {};
+  const sumber = {
+    kepsek: s.kepsek || {},
+    bendahara: s.bendahara || {},
+    komite: {
+      nama: (document.getElementById(p+'-komite-nama').value||'').trim(),
+      nip: (document.getElementById(p+'-komite-nip').value||'').trim()
+    }
+  };
+  document.getElementById(p+'-rows').innerHTML = '';
+  c.preset.forEach(r=>{
+    const src = r.src ? sumber[r.src] : {};
+    addTimRow(p, { nama:src.nama||'', nip:src.nip||'', dinas:r.dinas, tim:r.tim });
+  });
+}
+function initKeputusanFields(key){
+  const c = KEPUTUSAN_CFG[key], p = c.prefix, s = state.schoolData || {};
+  const isi = (id, nilai)=>{ const el = document.getElementById(p+'-'+id); if(el && !el.value) el.value = nilai; };
+  isi('tempat', s.namaSekolah || '');
+  isi('tanggal', todayStr());
+  const ta = tahunAnggaranAktif();
+  isi('tahun', `${ta}/${ta+1}`);
+  if(!document.getElementById(p+'-rows').children.length) muatSusunanStandar(key);
+}
+
+function buildKeputusanDocument(key, v, rows){
+  const c = KEPUTUSAN_CFG[key];
+  const s = state.schoolData || {};
+  const kepsek = s.kepsek || {};
+  const root = document.getElementById('print-root');
+  const kopHtml = buildKopSuratHtml(s);
+  const sekolah = s.namaSekolah || '';
+  const SEKOLAH = sekolah.toUpperCase();
+  const box = 'border:1px solid #16324F; padding:20px; margin-bottom:16px; font-family:Inter,sans-serif; font-size:13px; color:#23262B;';
+  const boxBreak = box + ' page-break-before:always;';
+  const tok = (t)=>String(t||'').replace(/\{sekolah\}/g, sekolah).replace(/\{tahun\}/g, v.tahun||'-');
+  const baris = (t)=>String(t||'').split('\n').map(l=>tok(l.trim())).filter(Boolean);
+
+  const memperhatikan = baris(v.memperhatikan);
+  if(v.sosialisasi){
+    memperhatikan.push(tok(c.sosialisasi).replace('{tanggal}', formatTanggalPanjang(v.sosialisasi)));
+  }
+  const daftar = (items, mode)=> items.length
+    ? `<table style="width:100%; border-collapse:collapse;">${items.map((t,i)=>`
+        <tr>
+          <td style="width:24px; vertical-align:top; padding:0 4px 5px 0;">${mode==='huruf' ? String.fromCharCode(97+i) : (i+1)}.</td>
+          <td style="vertical-align:top; padding:0 0 5px 0; text-align:justify;">${escapeHtml(t)}</td>
+        </tr>`).join('')}</table>`
+    : '-';
+  const barisK = (label, isi)=>`
+    <tr>
+      <td style="width:108px; vertical-align:top; padding-bottom:8px; font-weight:700;">${label}</td>
+      <td style="width:14px; vertical-align:top; padding-bottom:8px;">:</td>
+      <td style="vertical-align:top; padding-bottom:8px; text-align:justify;">${isi}</td>
+    </tr>`;
+  const diktum = baris(v.diktum);
+
+  const komiteNama = v.komiteNama || '( ..................... )';
+  const ttd = `
+    <table style="width:100%; margin-top:20px; font-size:13px; page-break-inside:avoid;"><tr>
+      <td style="width:45%; vertical-align:top; text-align:center;">Mengetahui,<br>Ketua Komite ${escapeHtml(sekolah)}<br>&nbsp;
+        <div style="height:70px;"></div>
+        <b>${escapeHtml(komiteNama)}</b><br>NIP. ${escapeHtml(v.komiteNip||'-')}</td>
+      <td style="width:10%;"></td>
+      <td style="width:45%; vertical-align:top; text-align:center;">Ditetapkan di : ${escapeHtml(v.tempat||sekolah)}<br>Pada Tanggal : ${formatTanggalPanjang(v.tanggal)}<br>Kepala Sekolah
+        <div style="height:70px;"></div>
+        <b>${escapeHtml(kepsek.nama||'( ..................... )')}</b><br>NIP. ${escapeHtml(kepsek.nip||'-')}</td>
+    </tr></table>`;
+
+  const th = 'border:1px solid #16324F; padding:5px 6px; background:#EAF0F5;';
+  const td = 'border:1px solid #16324F; padding:5px 6px; height:44px; vertical-align:middle;';
+  const lampiranRows = rows.map((r,i)=>`
+    <tr>
+      <td style="${td} text-align:center;">${i+1}.</td>
+      <td style="${td}">${escapeHtml(r.nama||'')}${r.nip ? `<br>${escapeHtml(r.nip)}` : ''}</td>
+      <td style="${td}">${escapeHtml(r.hp||'')}</td>
+      <td style="${td}">${escapeHtml(r.dinas||'')}</td>
+      <td style="${td}">${escapeHtml(r.tim||'')}</td>
+      <td style="${td}"></td>
+    </tr>`).join('');
+
+  const bodyHtml = `
+    <div style="${box}">
+      <div style="text-align:center; font-family:Lora,serif; font-weight:700; font-size:15px; letter-spacing:1px;">KEPUTUSAN</div>
+      <div style="text-align:center; font-family:Lora,serif; font-weight:700; font-size:14px;">KEPALA ${escapeHtml(SEKOLAH)}</div>
+      <div style="text-align:center; font-size:13px; margin:4px 0 10px;">NOMOR : ${escapeHtml(v.nomor)}</div>
+      <div style="text-align:center; font-size:13px; font-weight:700; margin-bottom:14px;">TENTANG<br>${escapeHtml(c.judul)}<br>TAHUN PELAJARAN ${escapeHtml(v.tahun)}</div>
+
+      <table style="width:100%; border-collapse:collapse; font-size:13px;">
+        ${barisK('Menimbang', daftar(baris(v.menimbang), 'huruf'))}
+        ${barisK('Mengingat', daftar(baris(v.mengingat)))}
+        ${barisK('Memperhatikan', daftar(memperhatikan))}
+      </table>
+
+      <div style="text-align:center; font-weight:700; font-size:13px; margin:10px 0 6px; letter-spacing:1px;">MEMUTUSKAN</div>
+      <table style="width:100%; border-collapse:collapse; font-size:13px;">
+        ${barisK('Menetapkan', '')}
+        ${diktum.map((t,i)=>barisK(ORDINAL_DIKTUM[i]||('Ke-'+(i+1)), escapeHtml(t))).join('')}
+      </table>
+      ${ttd}
+    </div>
+
+    <div style="${boxBreak}">
+      <div style="text-align:center; font-weight:700; font-size:14px;">LAMPIRAN</div>
+      <div style="text-align:center; font-weight:700; font-size:13px;">SURAT KEPUTUSAN KEPALA ${escapeHtml(SEKOLAH)}</div>
+      <div style="text-align:center; font-size:13px; margin:2px 0 6px;">NOMOR : ${escapeHtml(v.nomor)}</div>
+      <div style="text-align:center; font-weight:700; font-size:13px;">TENTANG ${escapeHtml(c.lampiranTentang)}</div>
+      <div style="text-align:center; font-weight:700; font-size:13px; margin-bottom:12px;">${escapeHtml(SEKOLAH)} TAHUN PELAJARAN ${escapeHtml(v.tahun)}</div>
+      <div style="text-align:center; font-weight:700; font-size:13px; margin-bottom:8px;">${escapeHtml(c.strukturJudul)}</div>
+      <table style="width:100%; border-collapse:collapse; font-size:12px;">
+        <thead>
+          <tr>
+            <th rowspan="2" style="${th} width:34px;">No</th>
+            <th rowspan="2" style="${th}">Nama / NIP</th>
+            <th rowspan="2" style="${th} width:105px;">No. HP</th>
+            <th colspan="2" style="${th}">Jabatan</th>
+            <th rowspan="2" style="${th} width:110px;">Tanda Tangan</th>
+          </tr>
+          <tr>
+            <th style="${th}">Dinas</th>
+            <th style="${th}">Tim</th>
+          </tr>
+        </thead>
+        <tbody>${lampiranRows}</tbody>
+      </table>
+      ${ttd}
+    </div>`;
+
+  root.innerHTML = `<div style="padding:24px;">${kopHtml}${bodyHtml}</div>`;
+}
+
+function cetakKeputusan(key){
+  const c = KEPUTUSAN_CFG[key], p = c.prefix;
+  const g = (id)=>document.getElementById(p+'-'+id).value;
+  const v = {
+    nomor: g('nomor').trim(), tanggal: g('tanggal'), tempat: g('tempat').trim(), tahun: g('tahun').trim(),
+    sosialisasi: g('sosialisasi'), komiteNama: g('komite-nama').trim(), komiteNip: g('komite-nip').trim(),
+    menimbang: g('menimbang'), mengingat: g('mengingat'), memperhatikan: g('memperhatikan'), diktum: g('diktum')
+  };
+  if(!v.nomor || !v.tanggal || !v.tahun){
+    alertFix('Mohon lengkapi minimal Nomor SK, Tanggal Penetapan, dan Tahun Pelajaran.');
+    return;
+  }
+  const rows = collectTimRows(p);
+  if(rows.length === 0){ alertFix('Tambahkan minimal satu baris pada Susunan Lampiran sebelum mencetak.'); return; }
+  buildKeputusanDocument(key, v, rows);
+  window.print();
+}
+
+/* ---- Surat Pengantar Laporan BOS ---- */
+const SURAT_PENGANTAR_ISI_DEFAULT = [
+  'Cover Depan (Kertas jilid Tahap 1 : Merah, Tahap 2 : Biru, Tahap 3 : Kuning)',
+  '- Rekomendasi',
+  '- SPMT',
+  '- SK Tim Pengelola BOS',
+  '- Buku Pembantu Pajak',
+  '- Buku Kas Pembantu Tunai',
+  '- Realisasi',
+  '- Buku Kas Pembantu Bank',
+  '- Rekening Koran',
+  '- Kwitansi BOS',
+  '- Buku Kas Umum',
+  'RKAS'
+].join('\n');
+
+function periodeTahapDefault(tahap){
+  const per = TAHAP_PERIODE[tahap] || TAHAP_PERIODE['1'];
+  return `${NAMA_BULAN[per.mulaiBulan-1]} s/d ${NAMA_BULAN[per.selesaiBulan-1]} ${tahunAnggaranAktif()}`;
+}
+function panelPengantarHtml(){
+  return `
+    <div class="bg-white rounded-lg border border-navy-100 p-4 no-print space-y-3">
+      <p class="text-xs font-semibold text-navy-400 uppercase tracking-wide">Detail Surat Pengantar</p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div><label class="${_kpLb}">Nomor Surat</label>
+          <input id="spg-nomor" class="${_kpIn}" placeholder="420 / 148 / SDK-Jong / X / 2026"></div>
+        <div><label class="${_kpLb}">Tanggal Surat</label>
+          <input type="date" id="spg-tanggal" class="${_kpIn}"></div>
+        <div><label class="${_kpLb}">Tempat Surat</label>
+          <input id="spg-tempat" class="${_kpIn}"></div>
+        <div><label class="${_kpLb}">Jumlah Jilid</label>
+          <input id="spg-jilid" class="${_kpIn}" placeholder="II ( Dua )"></div>
+        <div><label class="${_kpLb}">Tahap Laporan</label>
+          <select id="spg-tahap" class="${_kpIn} bg-white">
+            <option value="1">Tahap 1 (Januari–Juni)</option>
+            <option value="2">Tahap 2 (Juli–Desember)</option>
+          </select></div>
+        <div><label class="${_kpLb}">Periode</label>
+          <input id="spg-periode" class="${_kpIn}" placeholder="Januari s/d Juni 2026"></div>
+        <div class="sm:col-span-2"><label class="${_kpLb}">Uraian Laporan</label>
+          <input id="spg-uraian" class="${_kpIn}" value="laporan penggunaan Dana BOS"></div>
+        <div class="sm:col-span-2"><label class="${_kpLb}">Tujuan Surat (satu baris per baris alamat)</label>
+          <textarea id="spg-tujuan" rows="4" class="${_kpIn}">Kepala Dinas Pendidikan Pemuda dan Olahraga\nKabupaten Manggarai Timur\nDi\nLehong Borong</textarea>
+          <p class="text-[10px] text-navy-300 mt-1">Baris pertama otomatis diawali "Yth.".</p></div>
+        <div class="sm:col-span-2"><label class="${_kpLb}">Susunan Isi Jilid</label>
+          <textarea id="spg-isi" rows="12" class="${_kpIn} font-mono text-xs">${escapeHtml(SURAT_PENGANTAR_ISI_DEFAULT)}</textarea>
+          <p class="text-[10px] text-navy-300 mt-1">Satu butir per baris. Baris biasa diberi nomor 1, 2, 3 ...; baris yang diawali tanda "- " menjadi butir a, b, c ... di bawah nomor sebelumnya.</p></div>
+      </div>
+    </div>
+    <button id="spg-print" class="no-print bg-gold-500 hover:bg-gold-600 text-white text-sm font-semibold rounded px-5 py-2.5">Cetak Surat Pengantar</button>`;
+}
+function initPengantarFields(){
+  const s = state.schoolData || {};
+  const isi = (id, nilai)=>{ const el = document.getElementById('spg-'+id); if(el && !el.value) el.value = nilai; };
+  isi('tempat', s.namaSekolah || '');
+  isi('tanggal', todayStr());
+  const selTahap = document.getElementById('spg-tahap');
+  if(selTahap.dataset.inited !== '1'){
+    selTahap.value = state.tahapAktif || getDefaultTahap();
+    selTahap.dataset.inited = '1';
+  }
+  const per = document.getElementById('spg-periode');
+  if(!per.value) per.value = periodeTahapDefault(selTahap.value);
+}
+function buildSuratPengantarDocument(v){
+  const s = state.schoolData || {};
+  const kepsek = s.kepsek || {};
+  const root = document.getElementById('print-root');
+  const kopHtml = buildKopSuratHtml(s);
+  const box = 'border:1px solid #16324F; padding:20px; margin-bottom:16px; font-family:Inter,sans-serif; font-size:13px; color:#23262B;';
+
+  const tujuan = v.tujuan.split('\n').map(l=>l.trim()).filter(Boolean);
+  const tujuanHtml = tujuan.map((l,i)=>`<div>${i===0 ? 'Yth. ' : ''}${escapeHtml(l)}</div>`).join('');
+
+  let no = 0, huruf = 0;
+  const isiRows = v.isi.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{
+    if(l.startsWith('-')){
+      const t = l.replace(/^-+\s*/, '');
+      const h = String.fromCharCode(97 + (huruf++ % 26));
+      return `<tr><td style="width:26px;"></td><td style="width:24px; vertical-align:top; padding:0 4px 3px 0;">${h}.</td><td style="vertical-align:top; padding:0 0 3px 0;">${escapeHtml(t)}</td></tr>`;
+    }
+    no++; huruf = 0;
+    return `<tr><td style="width:26px; vertical-align:top; padding:4px 4px 3px 0;">${no}.</td><td colspan="2" style="vertical-align:top; padding:4px 0 3px 0;">${escapeHtml(l)}</td></tr>`;
+  }).join('');
+
+  const bodyHtml = `
+    <div style="${box}">
+      <div style="text-align:center; font-family:Lora,serif; font-weight:700; font-size:15px; letter-spacing:1px; text-decoration:underline;">SURAT PENGANTAR</div>
+      <div style="text-align:center; font-size:13px; margin:4px 0 16px;">NOMOR : ${escapeHtml(v.nomor)}</div>
+
+      <div style="margin-bottom:14px;">
+        <div>Kepada</div>
+        ${tujuanHtml}
+      </div>
+
+      <div style="margin-bottom:8px;">Dengan hormat,</div>
+      <div style="text-align:justify; margin-bottom:8px;">Bersama ini kami kirimkan ${escapeHtml(v.jilid||'-')} ${escapeHtml(v.uraian||'laporan')} tahap ${escapeHtml(v.tahap)} periode ( ${escapeHtml(v.periode||'-')} ) dengan susunan sebagai berikut :</div>
+      <table style="width:100%; border-collapse:collapse; font-size:13px; margin-bottom:12px;">${isiRows}</table>
+      <div style="text-align:justify;">Demikian surat pengantar ini dibuat untuk diketahui dan atas perhatian disampaikan terima kasih.</div>
+
+      <table style="width:100%; margin-top:26px; font-size:13px; page-break-inside:avoid;"><tr>
+        <td style="width:55%;"></td>
+        <td style="width:45%; text-align:center;">${escapeHtml(v.tempat||s.namaSekolah||'')}, ${formatTanggalPanjang(v.tanggal)}<br>Kepala Sekolah,
+          <div style="height:70px;"></div>
+          <b>${escapeHtml(kepsek.nama||'( ..................... )')}</b><br>NIP. ${escapeHtml(kepsek.nip||'-')}</td>
+      </tr></table>
+    </div>`;
+
+  root.innerHTML = `<div style="padding:24px;">${kopHtml}${bodyHtml}</div>`;
+}
+function cetakSuratPengantar(){
+  const g = (id)=>document.getElementById('spg-'+id).value;
+  const v = {
+    nomor: g('nomor').trim(), tanggal: g('tanggal'), tempat: g('tempat').trim(), jilid: g('jilid').trim(),
+    tahap: g('tahap'), periode: g('periode').trim(), uraian: g('uraian').trim(), tujuan: g('tujuan'), isi: g('isi')
+  };
+  if(!v.nomor || !v.tanggal){ alertFix('Mohon lengkapi minimal Nomor Surat dan Tanggal Surat.'); return; }
+  if(!v.tujuan.trim()){ alertFix('Mohon isi Tujuan Surat.'); return; }
+  buildSuratPengantarDocument(v);
+  window.print();
+}
+
+/* ---- Pasang panel & tombol ketiga dokumen ---- */
+(function setupDokumenTambahan(){
+  Object.keys(KEPUTUSAN_CFG).forEach(key=>{
+    const c = KEPUTUSAN_CFG[key], p = c.prefix;
+    document.getElementById('cetak-panel-'+key).innerHTML = keputusanPanelHtml(key);
+    document.getElementById(p+'-tambah').addEventListener('click', ()=>addTimRow(p));
+    document.getElementById(p+'-muat').addEventListener('click', ()=>muatSusunanStandar(key));
+    document.getElementById(p+'-print').addEventListener('click', ()=>cetakKeputusan(key));
+    setupPilihPegawaiCetak({
+      prefix: p, rowsSel: `#${p}-rows .tm-row`, namaSel: '.tm-nama', keepEmptyRows: true,
+      addRow: (d)=>addTimRow(p, { nama:d.nama, nip:d.nip, dinas:d.jabatan, _fill:true })
+    });
+  });
+  document.getElementById('cetak-panel-pengantar').innerHTML = panelPengantarHtml();
+  document.getElementById('spg-print').addEventListener('click', cetakSuratPengantar);
+  const selTahap = document.getElementById('spg-tahap');
+  selTahap.addEventListener('change', ()=>{
+    const per = document.getElementById('spg-periode');
+    // periode otomatis hanya diganti bila belum diubah manual
+    if(per.dataset.manual !== '1') per.value = periodeTahapDefault(selTahap.value);
+  });
+  document.getElementById('spg-periode').addEventListener('input', (e)=>{ e.target.dataset.manual = '1'; });
+})();
 
 /* =========================================================================
    UTIL
